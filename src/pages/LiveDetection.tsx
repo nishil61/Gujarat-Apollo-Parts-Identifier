@@ -110,19 +110,28 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
     setIsMobile(mobile);
   }, []);
 
-  // Switch camera handler: seamless switch
-  const handleSwitchCamera = useCallback(() => {
-    if (!isMobile || availableCameras.length < 2) return;
-    setFacingMode((prev) => (prev === 'user' ? 'environment' : 'user'));
-  }, [isMobile, availableCameras.length]);
-
-  // When facingMode changes and webcam is active, switch camera seamlessly
-  useEffect(() => {
-    if (webcamActive) {
-      startWebcamWithFacingMode(facingMode);
+  // Switch camera handler: proper restart approach
+  const handleSwitchCamera = useCallback(async () => {
+    if (!isMobile || availableCameras.length < 2 || !webcamActive) return;
+    
+    try {
+      // Stop current stream first
+      stopStream();
+      
+      // Switch facing mode
+      const newFacingMode = facingMode === 'user' ? 'environment' : 'user';
+      setFacingMode(newFacingMode);
+      
+      // Wait a bit for cleanup
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Start with new facing mode
+      await startWebcamWithFacingMode(newFacingMode);
+    } catch (error) {
+      console.error('Error switching camera:', error);
+      setError('Failed to switch camera. Please try again.');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [facingMode]);
+  }, [isMobile, availableCameras.length, webcamActive, facingMode, stopStream, startWebcamWithFacingMode]);
 
   // Main prediction loop using setInterval
   useEffect(() => {
@@ -132,6 +141,7 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
         const canvas = canvasRef.current;
         if (!video || !canvas || video.readyState !== 4) return;
         const ctx = canvas.getContext('2d');
+        if (!ctx) return;
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -251,7 +261,7 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
                 {isMobile && availableCameras.length > 1 && (
                   <button
                     onClick={handleSwitchCamera}
-                    className="w-full bg-slate-600 hover:bg-slate-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 shadow-lg"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 shadow-lg"
                   >
                     Switch Camera
                   </button>
