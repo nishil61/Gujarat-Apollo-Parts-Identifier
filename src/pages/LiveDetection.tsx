@@ -2,10 +2,6 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Camera } from "lucide-react";
 import { DetectionResult } from "../types";
 
-// Import the centralized model loading from the project directory
-declare const loadTeachableMachineModel: () => Promise<any>;
-declare const processImageFromCanvas: (canvas: HTMLCanvasElement) => Promise<DetectionResult[]>;
-
 const LiveDetection = () => {
   const [webcamActive, setWebcamActive] = useState(false);
   const [isModelLoading, setIsModelLoading] = useState(true);
@@ -24,9 +20,9 @@ const LiveDetection = () => {
   const loadModel = useCallback(async () => {
     setIsModelLoading(true);
     try {
-      // Use the global model loading function from the project utils
-      const modelUtils = await import('/workspaces/Gujarat-Apollo-Parts-Identifier/project/src/utils/modelUtils');
-      await modelUtils.loadTeachableMachineModel();
+      // Use the model loading function from local utils
+      const modelUtils = await import('../utils/modelUtils');
+      await modelUtils.loadModel();
       console.log("Model ready for webcam detection!");
       setError(null);
     } catch (err) {
@@ -42,8 +38,8 @@ const LiveDetection = () => {
   const predictLoop = useCallback(async () => {
     if (videoRef.current && canvasRef.current && webcamActive) {
       try {
-        // Use the global processImageFromCanvas function
-        const modelUtils = await import('/workspaces/Gujarat-Apollo-Parts-Identifier/project/src/utils/modelUtils');
+        // Use the local processImageFromCanvas function
+        const modelUtils = await import('../utils/modelUtils');
         
         const canvas = canvasRef.current;
         const video = videoRef.current;
