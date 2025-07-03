@@ -3,9 +3,17 @@ import { DetectionResult, ModelPrediction } from '../types';
 
 // --- Robust Model Loading State ---
 type ModelStatus = 'unloaded' | 'loading' | 'loaded' | 'failed';
-let model: tf.LayersModel | null = null;
-let modelStatus: ModelStatus = 'unloaded';
-let modelLoadPromise: Promise<tf.LayersModel | null> | null = null;
+
+// --- HMR-safe global state for the model ---
+interface GlobalWithModel {
+  gapi_model?: tf.LayersModel | null;
+  gapi_model_status?: ModelStatus;
+  gapi_model_promise?: Promise<tf.LayersModel | null> | null;
+}
+const globalWithModel = globalThis as GlobalWithModel;
+if (!globalWithModel.gapi_model_status) {
+  globalWithModel.gapi_model_status = 'unloaded';
+}
 // ---
 
 // Comprehensive Jaw Crusher parts list for Gujarat Apollo Industries
@@ -24,31 +32,31 @@ const JAW_CRUSHER_PARTS = [
  * This will work with models exported from teachablemachine.withgoogle.com
  */
 export const loadModel = (): Promise<tf.LayersModel | null> => {
-  if (modelStatus === 'loaded' && model) {
-    return Promise.resolve(model);
+  if (globalWithModel.gapi_model_status === 'loaded' && globalWithModel.gapi_model) {
+    return Promise.resolve(globalWithModel.gapi_model);
   }
-  if (modelStatus === 'loading' && modelLoadPromise) {
-    return modelLoadPromise;
+  if (globalWithModel.gapi_model_status === 'loading' && globalWithModel.gapi_model_promise) {
+    return globalWithModel.gapi_model_promise;
   }
 
-  modelStatus = 'loading';
-  modelLoadPromise = (async () => {
+  globalWithModel.gapi_model_status = 'loading';
+  globalWithModel.gapi_model_promise = (async () => {
     try {
       console.log('Attempting to load model from /models/model.json...');
       const loadedModel = await tf.loadLayersModel('/models/model.json');
       console.log('Model loaded successfully!');
-      model = loadedModel;
-      modelStatus = 'loaded';
-      return model;
+      globalWithModel.gapi_model = loadedModel;
+      globalWithModel.gapi_model_status = 'loaded';
+      return globalWithModel.gapi_model;
     } catch (error) {
       console.error('Failed to load real model, falling back to mock.', error);
-      model = createMockModel();
-      modelStatus = 'loaded'; // Mock is also considered loaded
-      return model;
+      globalWithModel.gapi_model = createMockModel();
+      globalWithModel.gapi_model_status = 'loaded'; // Mock is also considered loaded
+      return globalWithModel.gapi_model;
     }
   })();
   
-  return modelLoadPromise;
+  return globalWithModel.gapi_model_promise;
 };
 
 /**
