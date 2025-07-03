@@ -24,9 +24,21 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
   // Confidence threshold for determining if it's a jaw crusher part
   const CONFIDENCE_THRESHOLD = 0.6;
 
-  // Start and stop webcam logic
+  // Helper to stop the current stream
+  const stopStream = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+  }, []);
+
+  // Start webcam with proper teardown for switching
   const startWebcamWithFacingMode = useCallback(async (mode: 'user' | 'environment') => {
     setError(null);
+    stopStream(); // Always stop previous stream first
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       try {
         setIsModelLoading(true);
@@ -59,7 +71,7 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
       setError("Your browser does not support webcam access.");
       setWebcamActive(false);
     }
-  }, []);
+  }, [stopStream]);
 
   const handleStartWebcam = useCallback(async () => {
     startWebcamWithFacingMode(facingMode);
@@ -98,20 +110,15 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
     setIsMobile(mobile);
   }, []);
 
+  // Switch camera handler: seamless switch
   const handleSwitchCamera = useCallback(() => {
     if (!isMobile || availableCameras.length < 2) return;
     setFacingMode((prev) => (prev === 'user' ? 'environment' : 'user'));
   }, [isMobile, availableCameras.length]);
 
-  // Reactively restart webcam stream when facingMode changes and webcam is active
+  // When facingMode changes and webcam is active, switch camera seamlessly
   useEffect(() => {
     if (webcamActive) {
-      // Stop current stream
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-        streamRef.current = null;
-      }
-      // Start new stream with updated facingMode
       startWebcamWithFacingMode(facingMode);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
