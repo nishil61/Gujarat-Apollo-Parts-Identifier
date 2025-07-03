@@ -190,6 +190,7 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
               {webcamActive ? (
                 <div className="relative">
                   <video
+                    key={facingMode}
                     ref={videoRef}
                     autoPlay
                     playsInline
