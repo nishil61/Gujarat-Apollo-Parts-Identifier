@@ -1,16 +1,13 @@
 import React from 'react';
-import { Cog, Brain, Zap } from 'lucide-react';
+import { Cog, Zap } from 'lucide-react';
 
 const LoadingScreen: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 flex items-center justify-center">
       <div className="text-center">
-        <div className="relative mb-8">
+        <div className="mb-8">
           <div className="flex items-center justify-center w-24 h-24 bg-gradient-to-br from-orange-500 to-red-600 rounded-full mb-6 mx-auto">
             <Cog className="w-12 h-12 text-white animate-spin" />
-          </div>
-          <div className="absolute top-6 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center animate-pulse">
-            <Brain className="w-4 h-4 text-white" />
           </div>
         </div>
         
