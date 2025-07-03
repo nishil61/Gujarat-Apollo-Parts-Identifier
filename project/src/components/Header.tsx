@@ -8,7 +8,7 @@ const Header: React.FC = () => {
           <div className="flex items-center space-x-6">
             <div className="relative">
               <img 
-                src="../../../img.jpg" 
+                src="/img.jpg" 
                 alt="Apollo Logo" 
                 className="h-16 w-16 object-contain rounded-lg shadow-lg ring-2 ring-slate-600/30" 
               />
