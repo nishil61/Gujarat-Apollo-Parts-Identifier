@@ -1,77 +1,38 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import * as tmImage from "@teachablemachine/image";
 import { Camera } from "lucide-react";
+import { DetectionResult } from "../types";
 
-// Define the structure for a prediction
-interface Prediction {
-  className: string;
-  probability: number;
-}
+// Import the centralized model loading from the project directory
+declare const loadTeachableMachineModel: () => Promise<any>;
+declare const processImageFromCanvas: (canvas: HTMLCanvasElement) => Promise<DetectionResult[]>;
 
 const LiveDetection = () => {
   const [webcamActive, setWebcamActive] = useState(false);
   const [isModelLoading, setIsModelLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [predictions, setPredictions] = useState<Prediction[]>([]);
+  const [predictions, setPredictions] = useState<DetectionResult[]>([]);
   const [isNonJawCrusherPart, setIsNonJawCrusherPart] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const modelRef = useRef<tmImage.CustomMobileNet | null>(null);
   const requestRef = useRef<number | undefined>(undefined);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Confidence threshold for determining if it's a jaw crusher part
-  const CONFIDENCE_THRESHOLD = 0.6; // Adjust this value as needed
+  const CONFIDENCE_THRESHOLD = 0.6;
 
-  // Load the model
+  // Load the model using centralized utility
   const loadModel = useCallback(async () => {
     setIsModelLoading(true);
     try {
-      // Load model files from public directory
-      const modelURL = "/models/model.json";
-      const metadataURL = "/models/metadata.json";
-      
-      console.log("Attempting to load model from:", modelURL);
-      console.log("Attempting to load metadata from:", metadataURL);
-      
-      // First, verify the files are accessible
-      try {
-        const modelResponse = await fetch(modelURL);
-        const metadataResponse = await fetch(metadataURL);
-        
-        if (!modelResponse.ok) {
-          throw new Error(`Model file not found: ${modelResponse.status} ${modelResponse.statusText}`);
-        }
-        if (!metadataResponse.ok) {
-          throw new Error(`Metadata file not found: ${metadataResponse.status} ${metadataResponse.statusText}`);
-        }
-        
-        console.log("Model files are accessible, proceeding with TensorFlow.js loading...");
-      } catch (fetchError) {
-        console.error("File accessibility check failed:", fetchError);
-        const errorMessage = fetchError instanceof Error ? fetchError.message : String(fetchError);
-        throw new Error(`Cannot access model files: ${errorMessage}`);
-      }
-      
-      const model = await tmImage.load(modelURL, metadataURL);
-      modelRef.current = model;
-      console.log("Model loaded successfully!");
-      console.log("Model classes:", model.getClassLabels());
-      setError(null); // Clear any previous errors on successful load
+      // Use the global model loading function from the project utils
+      const modelUtils = await import('/workspaces/Gujarat-Apollo-Parts-Identifier/project/src/utils/modelUtils');
+      await modelUtils.loadTeachableMachineModel();
+      console.log("Model ready for webcam detection!");
+      setError(null);
     } catch (err) {
-      console.error("Detailed model loading error:", err);
-      let detailedError = "Failed to load the detection model.";
-      
-      if (err instanceof Error) {
-        if (err.message.includes("Cannot access model files")) {
-          detailedError = `${err.message}. Please ensure the model files are in the public/models/ directory and the development server is running.`;
-        } else if (err.message.includes("fetch")) {
-          detailedError = "Network error while loading model files. Please check your connection and try again.";
-        } else {
-          detailedError = `Model loading error: ${err.message}. Please check the browser console for more details.`;
-        }
-      }
-      
-      setError(detailedError);
+      console.error("Model loading error for webcam:", err);
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      setError(`Failed to load model: ${errorMessage}`);
     } finally {
       setIsModelLoading(false);
     }
@@ -79,18 +40,36 @@ const LiveDetection = () => {
 
   // Prediction loop
   const predictLoop = useCallback(async () => {
-    if (modelRef.current && videoRef.current) {
-      const prediction = await modelRef.current.predict(videoRef.current);
+    if (videoRef.current && canvasRef.current && webcamActive) {
+      try {
+        // Use the global processImageFromCanvas function
+        const modelUtils = await import('/workspaces/Gujarat-Apollo-Parts-Identifier/project/src/utils/modelUtils');
+        
+        const canvas = canvasRef.current;
+        const video = videoRef.current;
+        const ctx = canvas.getContext('2d');
+        
+        if (ctx && video.videoWidth > 0 && video.videoHeight > 0) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0);
+          
+          const prediction = await modelUtils.processImageFromCanvas(canvas);
+          
+          // Check if the highest confidence prediction is below threshold
+          const highestConfidence = Math.max(...prediction.map((p: DetectionResult) => p.confidence));
+          const isNonPart = highestConfidence < CONFIDENCE_THRESHOLD;
+          
+          setIsNonJawCrusherPart(isNonPart);
+          setPredictions(prediction);
+        }
+      } catch (error) {
+        console.error('Prediction error:', error);
+      }
       
-      // Check if the highest confidence prediction is below threshold
-      const highestConfidence = Math.max(...prediction.map(p => p.probability));
-      const isNonPart = highestConfidence < CONFIDENCE_THRESHOLD;
-      
-      setIsNonJawCrusherPart(isNonPart);
-      setPredictions(prediction);
       requestRef.current = requestAnimationFrame(predictLoop);
     }
-  }, []);
+  }, [webcamActive]);
 
   const handleStartWebcam = useCallback(async () => {
     setError(null);
@@ -172,6 +151,7 @@ const LiveDetection = () => {
                     muted
                     className="w-full h-96 object-cover rounded-md border-2 border-slate-400"
                   />
+                  <canvas ref={canvasRef} className="hidden" />
                   <div className="absolute top-4 right-4">
                     <div className="flex items-center space-x-2 bg-red-600 text-white px-3 py-1 rounded-full text-sm">
                       <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
@@ -248,21 +228,21 @@ const LiveDetection = () => {
                 {predictions.map((p, i) => (
                   <div key={i} className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-white font-medium">{p.className}</span>
+                      <span className="text-white font-medium">{p.label}</span>
                       <span className="font-mono text-sm text-slate-300">
-                        {(p.probability * 100).toFixed(2)}%
+                        {(p.confidence * 100).toFixed(2)}%
                       </span>
                     </div>
                     <div className="w-full bg-slate-700 rounded-full h-3 overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ease-out ${
-                          p.probability > 0.7 
+                          p.confidence > 0.7 
                             ? 'bg-gradient-to-r from-green-500 to-emerald-600' 
-                            : p.probability > 0.4 
+                            : p.confidence > 0.4 
                             ? 'bg-gradient-to-r from-yellow-500 to-orange-600' 
                             : 'bg-gradient-to-r from-red-500 to-red-600'
                         }`}
-                        style={{ width: `${p.probability * 100}%` }}
+                        style={{ width: `${p.confidence * 100}%` }}
                       ></div>
                     </div>
                   </div>
