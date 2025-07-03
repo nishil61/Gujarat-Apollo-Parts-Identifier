@@ -10,7 +10,7 @@ import HowToUse from './components/HowToUse';
 import Navigation from './components/Navigation';
 import LiveDetection from '../../src/pages/LiveDetection';
 import { DetectionResult } from './types';
-import { initializeTensorFlow } from './utils/modelUtils';
+import { initializeTensorFlow, loadTeachableMachineModel } from './utils/modelUtils';
 
 type ActiveTab = 'detection' | 'about' | 'howto';
 
@@ -20,12 +20,15 @@ function App() {
   const [uploadResults, setUploadResults] = useState<DetectionResult[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [isModelReady, setIsModelReady] = useState(false);
   const [isNonJawCrusherPart, setIsNonJawCrusherPart] = useState(false);
 
   useEffect(() => {
     const initialize = async () => {
       try {
         await initializeTensorFlow();
+        await loadTeachableMachineModel();
+        setIsModelReady(true);
         // Add a small delay to show the loading screen
         await new Promise(resolve => setTimeout(resolve, 1500));
       } catch (error) {
@@ -81,6 +84,7 @@ function App() {
                       <ImageUpload 
                         onResults={handleUploadResults}
                         onProcessingChange={handleProcessingChange}
+                        isModelReady={isModelReady}
                       />
                     </div>
                     
@@ -94,7 +98,7 @@ function App() {
                     </div>
                   </div>
                 ) : (
-                  <LiveDetection />
+                  <LiveDetection isModelReady={isModelReady} />
                 )}
               </div>
             </div>
