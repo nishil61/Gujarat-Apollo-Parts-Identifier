@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
+import Webcam from "react-webcam";
 import { Camera } from "lucide-react";
 import { DetectionResult } from "../types";
 import { processImageFromCanvas } from "../utils/modelUtils";
@@ -16,85 +17,12 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [isMobile, setIsMobile] = useState(false);
   const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Confidence threshold for determining if it's a jaw crusher part
   const CONFIDENCE_THRESHOLD = 0.6;
 
-  // Helper to stop the current stream
-  const stopStream = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-  }, []);
-
-  // Start webcam with proper teardown for switching
-  const startWebcamWithFacingMode = useCallback(async (mode: 'user' | 'environment') => {
-    setError(null);
-    stopStream(); // Always stop previous stream first
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      try {
-        setIsModelLoading(true);
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            width: { ideal: 640 },
-            height: { ideal: 480 },
-            facingMode: mode,
-          },
-        });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-        streamRef.current = stream;
-        setWebcamActive(true);
-      } catch (err: any) {
-        console.error("Error accessing webcam:", err);
-        let message = "An error occurred while accessing the webcam.";
-        if (err.name === "NotAllowedError") {
-          message = "Webcam access was denied. Please allow camera access in your browser settings.";
-        } else if (err.name === "NotFoundError") {
-          message = "No webcam found. Please ensure a camera is connected and enabled.";
-        }
-        setError(message);
-        setWebcamActive(false);
-      } finally {
-        setIsModelLoading(false);
-      }
-    } else {
-      setError("Your browser does not support webcam access.");
-      setWebcamActive(false);
-    }
-  }, [stopStream]);
-
-  const handleStartWebcam = useCallback(async () => {
-    startWebcamWithFacingMode(facingMode);
-  }, [facingMode, startWebcamWithFacingMode]);
-
-  const handleStopWebcam = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-    setWebcamActive(false);
-    setPredictions([]); // Clear predictions
-    setIsNonJawCrusherPart(false); // Reset non-part detection
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, []);
-
-  // Detect mobile/tablet and available cameras
   useEffect(() => {
     const checkCameras = async () => {
       try {
@@ -110,84 +38,35 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
     setIsMobile(mobile);
   }, []);
 
-  // Switch camera handler: seamless switching
-  const handleSwitchCamera = useCallback(async () => {
-    if (!isMobile || availableCameras.length < 2 || !webcamActive) return;
-    
-    setIsModelLoading(true);
+  const handleStartWebcam = useCallback(() => {
+    setWebcamActive(true);
     setError(null);
-    
-    try {
-      // Stop current stream and clear intervals
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-        streamRef.current = null;
-      }
-      
-      // Switch facing mode
-      const newFacingMode = facingMode === 'user' ? 'environment' : 'user';
-      setFacingMode(newFacingMode);
-      
-      // Wait for cleanup to complete
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      // Get new stream with the new facing mode
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-          facingMode: newFacingMode,
-        },
-      });
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
-      
-      streamRef.current = stream;
-      
-      // Restart prediction interval
-      intervalRef.current = setInterval(async () => {
-        const video = videoRef.current;
-        const canvas = canvasRef.current;
-        if (!video || !canvas || video.readyState !== 4) return;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        try {
-          const results = await processImageFromCanvas(canvas);
-          const highestConfidence = Math.max(...results.map((p: any) => p.confidence));
-          setIsNonJawCrusherPart(highestConfidence < CONFIDENCE_THRESHOLD);
-          setPredictions(results);
-        } catch (error) {
-          console.error('Prediction error:', error);
-        }
-      }, 1000);
-      
-    } catch (error) {
-      console.error('Error switching camera:', error);
-      setError('Failed to switch camera. Please try again.');
-      setWebcamActive(false);
-    } finally {
-      setIsModelLoading(false);
+  }, []);
+
+  const handleStopWebcam = useCallback(() => {
+    setWebcamActive(false);
+    setPredictions([]);
+    setIsNonJawCrusherPart(false);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
-  }, [isMobile, availableCameras.length, webcamActive, facingMode]);
+  }, []);
+
+  const handleSwitchCamera = useCallback(() => {
+    if (!isMobile || availableCameras.length < 2) return;
+    setFacingMode(prev => (prev === 'user' ? 'environment' : 'user'));
+  }, [isMobile, availableCameras.length]);
 
   // Main prediction loop using setInterval
   useEffect(() => {
-    if (webcamActive && videoRef.current) {
+    if (webcamActive && webcamRef.current) {
       intervalRef.current = setInterval(async () => {
-        const video = videoRef.current;
+        const webcam = webcamRef.current;
         const canvas = canvasRef.current;
-        if (!video || !canvas || video.readyState !== 4) return;
+        if (!webcam || !canvas) return;
+        const video = webcam.video as HTMLVideoElement;
+        if (!video || video.readyState !== 4) return;
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
         canvas.width = video.videoWidth;
@@ -206,24 +85,10 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
         if (intervalRef.current) clearInterval(intervalRef.current);
       };
     }
-    // Cleanup
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [webcamActive]);
-
-  // Attaches the stream to the video element when the webcam becomes active
-  useEffect(() => {
-    if (webcamActive && videoRef.current && streamRef.current) {
-      videoRef.current.srcObject = streamRef.current;
-    }
-  }, [webcamActive]);
-
-  useEffect(() => {
-    return () => {
-      handleStopWebcam();
-    };
-  }, [handleStopWebcam]);
+  }, [webcamActive, facingMode]);
 
   if (isModelLoading || isModelReady === false) {
     return (
@@ -247,12 +112,16 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
             <div className="mb-4">
               {webcamActive ? (
                 <div className="relative">
-                  <video
-                    key={`${facingMode}-${webcamActive}`}
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
+                  <Webcam
+                    key={facingMode}
+                    ref={webcamRef}
+                    audio={false}
+                    screenshotFormat="image/jpeg"
+                    videoConstraints={{
+                      width: 640,
+                      height: 480,
+                      facingMode: facingMode,
+                    }}
                     className="w-full h-96 object-cover rounded-md border-2 border-slate-400"
                   />
                   <canvas ref={canvasRef} className="hidden" />
@@ -309,10 +178,9 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
                 {isMobile && availableCameras.length > 1 && (
                   <button
                     onClick={handleSwitchCamera}
-                    disabled={isModelLoading}
-                    className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-slate-500 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 shadow-lg"
+                    className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 shadow-lg"
                   >
-                    {isModelLoading ? "Switching..." : "Switch Camera"}
+                    Switch Camera
                   </button>
                 )}
               </div>
