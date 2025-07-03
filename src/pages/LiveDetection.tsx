@@ -76,9 +76,36 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
     }
   }, []);
 
-  const handleSwitchCamera = useCallback(() => {
+  const handleSwitchCamera = useCallback(async () => {
     setFacingMode((prev) => (prev === 'user' ? 'environment' : 'user'));
-  }, []);
+    // If webcam is active, switch stream immediately
+    if (webcamActive) {
+      // Stop current stream
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+      // Request new stream with updated facingMode
+      try {
+        setIsModelLoading(true);
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+            facingMode: facingMode === 'user' ? 'environment' : 'user',
+          },
+        });
+        if (videoRef.current) {
+          videoRef.current.srcObject = newStream;
+        }
+        streamRef.current = newStream;
+      } catch (err: any) {
+        setError('An error occurred while switching the camera.');
+      } finally {
+        setIsModelLoading(false);
+      }
+    }
+  }, [webcamActive, facingMode]);
 
   // Main prediction loop using setInterval
   useEffect(() => {
