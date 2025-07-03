@@ -1,131 +1,93 @@
 import * as tf from '@tensorflow/tfjs';
 import * as tmImage from '@teachablemachine/image';
+import { DetectionResult } from '../types';
 
-// Global variables to store models and prevent re-registration
-let globalModel: tmImage.CustomMobileNet | null = null;
-let globalMetadata: any = null;
-let isModelLoading = false;
+// --- HMR-safe global state for the model ---
+interface GlobalWithModel {
+  gapi_tm_model?: tmImage.CustomMobileNet | null;
+  gapi_tm_model_promise?: Promise<tmImage.CustomMobileNet | null> | null;
+}
+const globalWithModel = globalThis as GlobalWithModel;
+// ---
 
-// Initialize TensorFlow.js with backend configuration
-const initializeTensorFlow = async () => {
-  try {
-    // Only set backend if not already set
-    if (tf.getBackend() !== 'webgl') {
-      await tf.setBackend('webgl');
+const MODEL_URL = "/models/model.json";
+const METADATA_URL = "/models/metadata.json";
+
+/**
+ * Load the Teachable Machine model, ensuring it's only loaded once.
+ */
+export const loadTeachableMachineModel = (): Promise<tmImage.CustomMobileNet | null> => {
+  // If the model is already loaded, return it.
+  if (globalWithModel.gapi_tm_model) {
+    return Promise.resolve(globalWithModel.gapi_tm_model);
+  }
+  // If the model is currently loading, return the existing promise.
+  if (globalWithModel.gapi_tm_model_promise) {
+    return globalWithModel.gapi_tm_model_promise;
+  }
+
+  // Start loading the model and store the promise.
+  console.log("Loading Teachable Machine model centrally...");
+  globalWithModel.gapi_tm_model_promise = (async () => {
+    try {
+      const model = await tmImage.load(MODEL_URL, METADATA_URL);
+      console.log("Central model loaded successfully!");
+      globalWithModel.gapi_tm_model = model;
+      return model;
+    } catch (error) {
+      console.error("Failed to load Teachable Machine model:", error);
+      // Set to null on failure so we can retry if needed.
+      globalWithModel.gapi_tm_model_promise = null; 
+      return null;
     }
+  })();
+  
+  return globalWithModel.gapi_tm_model_promise;
+};
+
+/**
+ * Process image from canvas (for webcam feed) using the shared model
+ */
+export const processImageFromCanvas = async (canvas: HTMLCanvasElement): Promise<DetectionResult[]> => {
+  const model = await loadTeachableMachineModel();
+  if (!model) {
+    throw new Error("Model is not available for prediction.");
+  }
+
+  try {
+    const predictions = await model.predict(canvas);
+    
+    const results: DetectionResult[] = predictions.map(pred => ({
+      label: pred.className,
+      confidence: pred.probability,
+      timestamp: Date.now()
+    }));
+    
+    results.sort((a, b) => b.confidence - a.confidence);
+    return results;
+  } catch (error) {
+    console.error('Canvas processing error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Initialize TensorFlow.js backend
+ */
+export const initializeTensorFlow = async (): Promise<void> => {
+  try {
+    // Set backend to webgl for better performance
+    await tf.setBackend('webgl');
     await tf.ready();
     console.log('TensorFlow.js initialized successfully');
     console.log('Backend:', tf.getBackend());
   } catch (error) {
-    console.warn('WebGL backend failed, falling back to CPU:', error);
+    console.warn('WebGL backend failed, falling back to CPU');
     await tf.setBackend('cpu');
     await tf.ready();
-    console.log('TensorFlow.js initialized with CPU backend');
   }
 };
 
-// Load the model with proper error handling and singleton pattern
-export const loadModel = async (): Promise<tmImage.CustomMobileNet | null> => {
-  // Return existing model if already loaded
-  if (globalModel && globalMetadata) {
-    console.log('Using existing loaded model');
-    return globalModel;
-  }
-
-  // Prevent multiple simultaneous loading attempts
-  if (isModelLoading) {
-    console.log('Model loading already in progress, waiting...');
-    // Wait for existing loading to complete
-    while (isModelLoading) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    return globalModel;
-  }
-
-  isModelLoading = true;
-
-  try {
-    // Initialize TensorFlow.js first
-    await initializeTensorFlow();
-
-    const modelURL = '/models/model.json';
-    const metadataURL = '/models/metadata.json';
-    
-    console.log('Loading model from', modelURL, '...');
-
-    // Check if model files exist
-    try {
-      const modelResponse = await fetch(modelURL);
-      const metadataResponse = await fetch(metadataURL);
-      
-      if (!modelResponse.ok || !metadataResponse.ok) {
-        throw new Error('Model files not found');
-      }
-    } catch (error) {
-      console.log('Real model not found, using demo simulation mode');
-      isModelLoading = false;
-      throw new Error('Failed to load the part identification model');
-    }
-
-    // Dispose any existing models to prevent variable conflicts
-    if (globalModel) {
-      globalModel.dispose();
-      globalModel = null;
-    }
-
-    // Clear any existing TensorFlow variables
-    tf.disposeVariables();
-
-    // Load the model
-    globalModel = await tmImage.load(modelURL, metadataURL);
-    
-    // Load metadata separately for reference
-    const metadataResponse = await fetch(metadataURL);
-    globalMetadata = await metadataResponse.json();
-    
-    console.log('Model loaded successfully!');
-    console.log('Available classes:', globalMetadata.labels);
-    
-    isModelLoading = false;
-    return globalModel;
-    
-  } catch (error) {
-    isModelLoading = false;
-    console.error('Error loading model:', error);
-    throw error;
-  }
-};
-
-// Predict function with proper error handling
-export const predict = async (imageElement: HTMLImageElement | HTMLCanvasElement | HTMLVideoElement): Promise<any[]> => {
-  if (!globalModel) {
-    throw new Error('Model not loaded. Please load the model first.');
-  }
-
-  try {
-    const predictions = await globalModel.predict(imageElement);
-    return predictions;
-  } catch (error) {
-    console.error('Error during prediction:', error);
-    throw error;
-  }
-};
-
-// Clean up resources
-export const disposeModel = () => {
-  if (globalModel) {
-    globalModel.dispose();
-    globalModel = null;
-    globalMetadata = null;
-    console.log('Model disposed successfully');
-  }
-};
-
-// Get class labels
-export const getClassLabels = (): string[] => {
-  if (!globalMetadata || !globalMetadata.labels) {
-    return ['Cheek Plates', 'Eccentric Shaft', 'Flywheel', 'Jaw Crusher Bearings', 'Jaw Plates', 'Pitman', 'Toggle Plate'];
-  }
-  return globalMetadata.labels;
-};
+// Initialize TensorFlow.js when the module loads
+initializeTensorFlow();
 
