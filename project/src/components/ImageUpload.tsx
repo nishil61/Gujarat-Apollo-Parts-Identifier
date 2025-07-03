@@ -1,7 +1,7 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Upload, Image, Loader, AlertCircle } from 'lucide-react';
 import { DetectionResult } from '../types';
-import * as tmImage from "@teachablemachine/image";
+import { loadTeachableMachineModel, processImageFromCanvas } from '../utils/modelUtils';
 
 interface ImageUploadProps {
   onResults: (results: DetectionResult[]) => void;
@@ -14,56 +14,23 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onResults, onProcessingChange
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isModelLoading, setIsModelLoading] = useState(true);
-  const [isNonJawCrusherPart, setIsNonJawCrusherPart] = useState(false);
-  const modelRef = useRef<tmImage.CustomMobileNet | null>(null);
 
-  // Confidence threshold for determining if it's a jaw crusher part
-  const CONFIDENCE_THRESHOLD = 0.6; // Same as LiveDetection
-
-  // Load the model using Teachable Machine library
-  const loadModel = useCallback(async () => {
-    setIsModelLoading(true);
-    try {
-      // Update paths to match your model location in public/models/
-      const modelURL = "/models/model.json";
-      const metadataURL = "/models/metadata.json";
-      
-      console.log("Loading Teachable Machine model for image upload...");
-      console.log("Model URL:", modelURL);
-      console.log("Metadata URL:", metadataURL);
-      
-      // Test file accessibility first
-      try {
-        const modelResponse = await fetch(modelURL);
-        const metadataResponse = await fetch(metadataURL);
-        
-        if (!modelResponse.ok) {
-          throw new Error(`Model file not accessible: ${modelResponse.status}`);
-        }
-        if (!metadataResponse.ok) {
-          throw new Error(`Metadata file not accessible: ${metadataResponse.status}`);
-        }
-      } catch (fetchError) {
-        console.error("Model files not accessible:", fetchError);
-        throw new Error("Model files not found. Please ensure they are in public/models/");
-      }
-      
-      const model = await tmImage.load(modelURL, metadataURL);
-      modelRef.current = model;
-      console.log("Model loaded successfully for image upload!");
-      console.log("Available classes:", model.getClassLabels());
-    } catch (err) {
-      console.error("Model loading error in ImageUpload:", err);
-      const errorMessage = err instanceof Error ? err.message : "Unknown error";
-      setError(`Failed to load model: ${errorMessage}`);
-    } finally {
-      setIsModelLoading(false);
-    }
-  }, []);
-
+  // Load the model using the central utility
   useEffect(() => {
-    loadModel();
-  }, [loadModel]);
+    const initModel = async () => {
+      setIsModelLoading(true);
+      try {
+        await loadTeachableMachineModel();
+        console.log("Shared model is ready for image upload.");
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "Unknown error";
+        setError(`Failed to load model: ${errorMessage}`);
+      } finally {
+        setIsModelLoading(false);
+      }
+    };
+    initModel();
+  }, []);
 
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -94,49 +61,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onResults, onProcessingChange
     event.preventDefault();
   }, []);
 
-  const processImageWithModel = async (imageElement: HTMLImageElement): Promise<DetectionResult[]> => {
-    if (!modelRef.current) {
-      throw new Error("Model not loaded");
-    }
-
-    try {
-      console.log("Starting prediction with image:", imageElement.width, "x", imageElement.height);
-      
-      // Ensure image is loaded
-      if (!imageElement.complete || imageElement.naturalHeight === 0) {
-        throw new Error("Image not properly loaded");
-      }
-      
-      const predictions = await modelRef.current.predict(imageElement);
-      console.log("Raw predictions:", predictions);
-      
-      // Check if the highest confidence prediction is below threshold
-      const highestConfidence = Math.max(...predictions.map(p => p.probability));
-      const isNonPart = highestConfidence < CONFIDENCE_THRESHOLD;
-      setIsNonJawCrusherPart(isNonPart);
-      
-      // Convert to DetectionResult format
-      const results: DetectionResult[] = predictions.map(pred => ({
-        label: pred.className,
-        confidence: pred.probability,
-        timestamp: Date.now()
-      }));
-
-      // Sort by confidence (highest first)
-      results.sort((a, b) => b.confidence - a.confidence);
-      
-      console.log("Processed results:", results);
-      return results;
-    } catch (error) {
-      console.error('Prediction error:', error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown prediction error";
-      throw new Error(`Failed to analyze image: ${errorMessage}`);
-    }
-  };
-
   const handleSubmit = async () => {
-    if (!selectedFile || !modelRef.current) {
-      console.log("Submit blocked - file:", !!selectedFile, "model:", !!modelRef.current);
+    if (!selectedFile || isProcessing || isModelLoading) {
       return;
     }
 
@@ -145,29 +71,28 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onResults, onProcessingChange
     setError(null);
 
     try {
-      console.log("Processing file:", selectedFile.name, selectedFile.type);
-      
-      // Create image element for prediction
       const img = new window.Image();
-      img.crossOrigin = "anonymous"; // Add CORS support
-      
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
       await new Promise<void>((resolve, reject) => {
         img.onload = () => {
-          console.log("Image loaded for prediction:", img.width, "x", img.height);
-          resolve();
+          if (ctx) {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            resolve();
+          } else {
+            reject(new Error("Could not get canvas context"));
+          }
         };
-        img.onerror = (e) => {
-          console.error("Image load error:", e);
-          reject(new Error('Failed to load image for processing'));
-        };
+        img.onerror = () => reject(new Error('Failed to load image for processing'));
         img.src = URL.createObjectURL(selectedFile);
       });
 
-      const results = await processImageWithModel(img);
-      console.log("Final results:", results);
+      const results = await processImageFromCanvas(canvas);
       onResults(results);
       
-      // Clean up
       URL.revokeObjectURL(img.src);
     } catch (err) {
       console.error('Image processing error:', err);
