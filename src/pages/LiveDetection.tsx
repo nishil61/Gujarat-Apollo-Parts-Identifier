@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Camera } from "lucide-react";
 import { DetectionResult } from "../types";
+import { processImageFromCanvas } from "../utils/modelUtils";
 
 interface LiveDetectionProps {
   isModelReady?: boolean;
@@ -8,7 +9,7 @@ interface LiveDetectionProps {
 
 const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
   const [webcamActive, setWebcamActive] = useState(false);
-  const [isModelLoading, setIsModelLoading] = useState(true);
+  const [isModelLoading, setIsModelLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [predictions, setPredictions] = useState<DetectionResult[]>([]);
   const [isNonJawCrusherPart, setIsNonJawCrusherPart] = useState(false);
@@ -20,29 +21,12 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
   // Confidence threshold for determining if it's a jaw crusher part
   const CONFIDENCE_THRESHOLD = 0.6;
 
-  // Load the model using centralized utility
-  const [model, setModel] = useState<any>(null);
-  const loadModel = useCallback(async () => {
-    setIsModelLoading(true);
-    try {
-      const modelUtils = await import('../utils/modelUtils');
-      const loadedModel = await modelUtils.loadModel();
-      setModel(loadedModel);
-      setError(null);
-    } catch (err) {
-      console.error("Model loading error for webcam:", err);
-      const errorMessage = err instanceof Error ? err.message : "Unknown error";
-      setError(`Failed to load model: ${errorMessage}`);
-    } finally {
-      setIsModelLoading(false);
-    }
-  }, []);
-
   // Start and stop webcam logic
   const handleStartWebcam = useCallback(async () => {
     setError(null);
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       try {
+        setIsModelLoading(true);
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
             width: { ideal: 640 },
@@ -64,6 +48,8 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
         }
         setError(message);
         setWebcamActive(false);
+      } finally {
+        setIsModelLoading(false);
       }
     } else {
       setError("Your browser does not support webcam access.");
@@ -90,7 +76,7 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
 
   // Main prediction loop using setInterval
   useEffect(() => {
-    if (webcamActive && model && videoRef.current) {
+    if (webcamActive && videoRef.current) {
       intervalRef.current = setInterval(async () => {
         const video = videoRef.current;
         const canvas = canvasRef.current;
@@ -100,16 +86,10 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
         canvas.height = video.videoHeight;
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         try {
-          const modelUtils = await import('../utils/modelUtils');
-          const prediction = await modelUtils.predict(canvas);
-          const highestConfidence = Math.max(...prediction.map((p: any) => p.probability));
+          const results = await processImageFromCanvas(canvas);
+          const highestConfidence = Math.max(...results.map((p: any) => p.confidence));
           setIsNonJawCrusherPart(highestConfidence < CONFIDENCE_THRESHOLD);
-          const formattedPredictions: DetectionResult[] = prediction.map((p: any) => ({
-            label: p.className,
-            confidence: p.probability,
-            timestamp: Date.now(),
-          }));
-          setPredictions(formattedPredictions);
+          setPredictions(results);
         } catch (error) {
           console.error('Prediction error:', error);
         }
@@ -122,7 +102,7 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [webcamActive, model]);
+  }, [webcamActive]);
 
   // Attaches the stream to the video element when the webcam becomes active
   useEffect(() => {
@@ -132,11 +112,10 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
   }, [webcamActive]);
 
   useEffect(() => {
-    loadModel(); // Load model on component mount
     return () => {
       handleStopWebcam();
     };
-  }, [handleStopWebcam, loadModel]);
+  }, [handleStopWebcam]);
 
   if (isModelLoading || isModelReady === false) {
     return (
