@@ -2,8 +2,7 @@ import * as tf from '@tensorflow/tfjs';
 import { DetectionResult, ModelPrediction } from '../types';
 
 // Global model variable to store the loaded model
-let model: tf.LayersModel | null = null;
-let isModelLoading = false;
+let modelPromise: Promise<tf.LayersModel> | null = null;
 
 // Comprehensive Jaw Crusher parts list for Gujarat Apollo Industries
 const JAW_CRUSHER_PARTS = [
@@ -20,38 +19,23 @@ const JAW_CRUSHER_PARTS = [
  * Load the TensorFlow.js model from the models directory
  * This will work with models exported from teachablemachine.withgoogle.com
  */
-export const loadModel = async (): Promise<tf.LayersModel> => {
-  if (model) return model;
-  
-  if (isModelLoading) {
-    // Wait for the model to finish loading
-    while (isModelLoading) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    return model!;
+export const loadModel = (): Promise<tf.LayersModel> => {
+  if (!modelPromise) {
+    modelPromise = (async () => {
+      try {
+        // Try to load the actual model first
+        console.log('Loading model from /models/model.json...');
+        const model = await tf.loadLayersModel('/models/model.json');
+        console.log('Model loaded successfully!');
+        return model;
+      } catch (error) {
+        console.log('Real model not found, using demo simulation mode');
+        // Create a mock model for demonstration
+        return createMockModel();
+      }
+    })();
   }
-
-  try {
-    isModelLoading = true;
-    
-    // Try to load the actual model first
-    try {
-      console.log('Loading model from /models/model.json...');
-      model = await tf.loadLayersModel('/models/model.json');
-      console.log('Model loaded successfully!');
-    } catch (error) {
-      console.log('Real model not found, using demo simulation mode');
-      // Create a mock model for demonstration
-      model = createMockModel();
-    }
-    
-    return model;
-  } catch (error) {
-    console.error('Error loading model:', error);
-    throw new Error('Failed to load the part identification model');
-  } finally {
-    isModelLoading = false;
-  }
+  return modelPromise;
 };
 
 /**
