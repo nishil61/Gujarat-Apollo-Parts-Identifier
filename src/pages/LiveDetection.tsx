@@ -2,7 +2,11 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Camera } from "lucide-react";
 import { DetectionResult } from "../types";
 
-const LiveDetection = () => {
+interface LiveDetectionProps {
+  isModelReady?: boolean;
+}
+
+const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
   const [webcamActive, setWebcamActive] = useState(false);
   const [isModelLoading, setIsModelLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -12,6 +16,7 @@ const LiveDetection = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const isPredicting = useRef(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const requestRef = useRef<number | null>(null);
 
   // Confidence threshold for determining if it's a jaw crusher part
   const CONFIDENCE_THRESHOLD = 0.6;
@@ -115,6 +120,7 @@ const LiveDetection = () => {
             const formattedPredictions = prediction.map((p: any) => ({
               label: p.className,
               confidence: p.probability,
+              timestamp: Date.now(),
             }));
             setPredictions(formattedPredictions);
           }
@@ -157,6 +163,17 @@ const LiveDetection = () => {
       handleStopWebcam();
     };
   }, [handleStopWebcam, loadModel]);
+
+  if (isModelLoading || isModelReady === false) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p>Loading AI model...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 grid md:grid-cols-2 gap-4">
