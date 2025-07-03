@@ -179,7 +179,7 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
                   <button
                     onClick={handleSwitchCamera}
                     disabled={isModelLoading}
-                    className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 shadow-lg disabled:bg-slate-500 disabled:text-slate-400 disabled:cursor-not-allowed"
+                    className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 shadow-lg"
                   >
                     {isModelLoading ? "Switching..." : "Switch Camera"}
                   </button>
