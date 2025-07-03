@@ -14,21 +14,20 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
   const [isNonJawCrusherPart, setIsNonJawCrusherPart] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const isPredicting = useRef(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const requestRef = useRef<number | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Confidence threshold for determining if it's a jaw crusher part
   const CONFIDENCE_THRESHOLD = 0.6;
 
   // Load the model using centralized utility
+  const [model, setModel] = useState<any>(null);
   const loadModel = useCallback(async () => {
     setIsModelLoading(true);
     try {
-      // Use the model loading function from local utils
       const modelUtils = await import('../utils/modelUtils');
-      await modelUtils.loadModel();
-      console.log("Model ready for webcam detection!");
+      const loadedModel = await modelUtils.loadModel();
+      setModel(loadedModel);
       setError(null);
     } catch (err) {
       console.error("Model loading error for webcam:", err);
@@ -42,7 +41,6 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
   // Start and stop webcam logic
   const handleStartWebcam = useCallback(async () => {
     setError(null);
-
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -84,70 +82,47 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
     setWebcamActive(false);
     setPredictions([]); // Clear predictions
     setIsNonJawCrusherPart(false); // Reset non-part detection
-    if (requestRef.current) {
-      cancelAnimationFrame(requestRef.current);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
-    isPredicting.current = false;
   }, []);
 
-  // Main prediction loop controlled by useEffect
+  // Main prediction loop using setInterval
   useEffect(() => {
-    const predictLoop = async () => {
-      if (!webcamActive || !videoRef.current || isPredicting.current) {
-        requestRef.current = requestAnimationFrame(predictLoop);
-        return;
-      }
-
-      isPredicting.current = true;
-
-      try {
-        const modelUtils = await import('../utils/modelUtils');
-        const canvas = canvasRef.current;
+    if (webcamActive && model && videoRef.current) {
+      intervalRef.current = setInterval(async () => {
         const video = videoRef.current;
-        const ctx = canvas?.getContext('2d');
-
-        if (ctx && video && video.readyState === 4) {
-          if (canvas) {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            ctx.drawImage(video, 0, 0);
-            
-            const prediction = await modelUtils.predict(canvas);
-            
-            const highestConfidence = Math.max(...prediction.map((p: any) => p.probability));
-            setIsNonJawCrusherPart(highestConfidence < CONFIDENCE_THRESHOLD);
-            
-            const formattedPredictions = prediction.map((p: any) => ({
-              label: p.className,
-              confidence: p.probability,
-              timestamp: Date.now(),
-            }));
-            setPredictions(formattedPredictions);
-          }
+        const canvas = canvasRef.current;
+        if (!video || !canvas || video.readyState !== 4) return;
+        const ctx = canvas.getContext('2d');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        try {
+          const modelUtils = await import('../utils/modelUtils');
+          const prediction = await modelUtils.predict(canvas);
+          const highestConfidence = Math.max(...prediction.map((p: any) => p.probability));
+          setIsNonJawCrusherPart(highestConfidence < CONFIDENCE_THRESHOLD);
+          const formattedPredictions: DetectionResult[] = prediction.map((p: any) => ({
+            label: p.className,
+            confidence: p.probability,
+            timestamp: Date.now(),
+          }));
+          setPredictions(formattedPredictions);
+        } catch (error) {
+          console.error('Prediction error:', error);
         }
-      } catch (error) {
-        console.error('Prediction error:', error);
-      } finally {
-        isPredicting.current = false;
-      }
-
-      requestRef.current = requestAnimationFrame(predictLoop);
-    };
-
-    if (webcamActive) {
-      requestRef.current = requestAnimationFrame(predictLoop);
-    } else {
-      if (requestRef.current) {
-        cancelAnimationFrame(requestRef.current);
-      }
+      }, 1000);
+      return () => {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+      };
     }
-
+    // Cleanup
     return () => {
-      if (requestRef.current) {
-        cancelAnimationFrame(requestRef.current);
-      }
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [webcamActive]);
+  }, [webcamActive, model]);
 
   // Attaches the stream to the video element when the webcam becomes active
   useEffect(() => {
@@ -158,7 +133,6 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
 
   useEffect(() => {
     loadModel(); // Load model on component mount
-    // Stop webcam on component unmount
     return () => {
       handleStopWebcam();
     };
