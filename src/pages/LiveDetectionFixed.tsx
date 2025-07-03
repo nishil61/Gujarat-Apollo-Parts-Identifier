@@ -75,8 +75,12 @@ const LiveDetection: React.FC = () => {
 
   useEffect(() => {
     if (!isLoading && model) {
-      const interval = setInterval(detect, 1000);
-      return () => clearInterval(interval);
+      console.log('Starting detection interval...');
+      const interval = setInterval(detect, 500); // Detect every 0.5 seconds for more responsive updates
+      return () => {
+        console.log('Cleaning up detection interval...');
+        clearInterval(interval);
+      };
     }
   }, [detect, isLoading, model]);
 
