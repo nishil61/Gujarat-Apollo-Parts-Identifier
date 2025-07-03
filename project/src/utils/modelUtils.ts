@@ -2,6 +2,7 @@ import * as tf from '@tensorflow/tfjs';
 import { DetectionResult, ModelPrediction } from '../types';
 
 // Global model variable to store the loaded model
+let model: tf.LayersModel | null = null;
 let modelPromise: Promise<tf.LayersModel> | null = null;
 
 // Comprehensive Jaw Crusher parts list for Gujarat Apollo Industries
@@ -20,18 +21,23 @@ const JAW_CRUSHER_PARTS = [
  * This will work with models exported from teachablemachine.withgoogle.com
  */
 export const loadModel = (): Promise<tf.LayersModel> => {
+  if (model) {
+    return Promise.resolve(model);
+  }
   if (!modelPromise) {
     modelPromise = (async () => {
       try {
         // Try to load the actual model first
         console.log('Loading model from /models/model.json...');
-        const model = await tf.loadLayersModel('/models/model.json');
+        const loadedModel = await tf.loadLayersModel('/models/model.json');
         console.log('Model loaded successfully!');
+        model = loadedModel;
         return model;
       } catch (error) {
         console.log('Real model not found, using demo simulation mode');
         // Create a mock model for demonstration
-        return createMockModel();
+        model = createMockModel();
+        return model;
       }
     })();
   }
@@ -75,17 +81,17 @@ const preprocessImage = (imageElement: HTMLImageElement | HTMLCanvasElement): tf
  * Make prediction using the loaded model
  */
 const predict = async (preprocessedImage: tf.Tensor): Promise<ModelPrediction[]> => {
-  const model = await loadModel();
+  const modelToUse = await loadModel();
   
   try {
     // Check if this is our mock model
-    if (model.layers.length === 3) {
+    if (modelToUse.layers.length === 3 && modelToUse.name.startsWith('sequential')) { // Mock models are sequential
       // Mock prediction for demonstration
       return generateMockPrediction();
     }
     
     // Real model prediction
-    const prediction = model.predict(preprocessedImage) as tf.Tensor;
+    const prediction = modelToUse.predict(preprocessedImage) as tf.Tensor;
     const predictions = await prediction.data();
     
     // Convert to array of predictions with labels
