@@ -13,6 +13,7 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
   const [error, setError] = useState<string | null>(null);
   const [predictions, setPredictions] = useState<DetectionResult[]>([]);
   const [isNonJawCrusherPart, setIsNonJawCrusherPart] = useState(false);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -31,6 +32,7 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
           video: {
             width: { ideal: 640 },
             height: { ideal: 480 },
+            facingMode: { exact: facingMode },
           },
         });
         if (videoRef.current) {
@@ -55,7 +57,7 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
       setError("Your browser does not support webcam access.");
       setWebcamActive(false);
     }
-  }, []);
+  }, [facingMode]);
 
   const handleStopWebcam = useCallback(() => {
     if (streamRef.current) {
@@ -72,6 +74,10 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+  }, []);
+
+  const handleSwitchCamera = useCallback(() => {
+    setFacingMode((prev) => (prev === 'user' ? 'environment' : 'user'));
   }, []);
 
   // Main prediction loop using setInterval
@@ -190,12 +196,20 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
                 {isModelLoading ? "Loading Model..." : "Start Webcam"}
               </button>
             ) : (
-              <button
-                onClick={handleStopWebcam}
-                className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 shadow-lg"
-              >
-                Stop Webcam
-              </button>
+              <div className="flex flex-col space-y-4">
+                <button
+                  onClick={handleStopWebcam}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 shadow-lg"
+                >
+                  Stop Webcam
+                </button>
+                <button
+                  onClick={handleSwitchCamera}
+                  className="w-full bg-slate-600 hover:bg-slate-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 shadow-lg"
+                >
+                  Switch Camera
+                </button>
+              </div>
             )}
           </div>
         </div>
