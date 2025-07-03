@@ -1,9 +1,12 @@
 import * as tf from '@tensorflow/tfjs';
 import { DetectionResult, ModelPrediction } from '../types';
 
-// Global model variable to store the loaded model
+// --- Robust Model Loading State ---
+type ModelStatus = 'unloaded' | 'loading' | 'loaded' | 'failed';
 let model: tf.LayersModel | null = null;
-let modelPromise: Promise<tf.LayersModel> | null = null;
+let modelStatus: ModelStatus = 'unloaded';
+let modelLoadPromise: Promise<tf.LayersModel | null> | null = null;
+// ---
 
 // Comprehensive Jaw Crusher parts list for Gujarat Apollo Industries
 const JAW_CRUSHER_PARTS = [
@@ -20,28 +23,32 @@ const JAW_CRUSHER_PARTS = [
  * Load the TensorFlow.js model from the models directory
  * This will work with models exported from teachablemachine.withgoogle.com
  */
-export const loadModel = (): Promise<tf.LayersModel> => {
-  if (model) {
+export const loadModel = (): Promise<tf.LayersModel | null> => {
+  if (modelStatus === 'loaded' && model) {
     return Promise.resolve(model);
   }
-  if (!modelPromise) {
-    modelPromise = (async () => {
-      try {
-        // Try to load the actual model first
-        console.log('Loading model from /models/model.json...');
-        const loadedModel = await tf.loadLayersModel('/models/model.json');
-        console.log('Model loaded successfully!');
-        model = loadedModel;
-        return model;
-      } catch (error) {
-        console.log('Real model not found, using demo simulation mode');
-        // Create a mock model for demonstration
-        model = createMockModel();
-        return model;
-      }
-    })();
+  if (modelStatus === 'loading' && modelLoadPromise) {
+    return modelLoadPromise;
   }
-  return modelPromise;
+
+  modelStatus = 'loading';
+  modelLoadPromise = (async () => {
+    try {
+      console.log('Attempting to load model from /models/model.json...');
+      const loadedModel = await tf.loadLayersModel('/models/model.json');
+      console.log('Model loaded successfully!');
+      model = loadedModel;
+      modelStatus = 'loaded';
+      return model;
+    } catch (error) {
+      console.error('Failed to load real model, falling back to mock.', error);
+      model = createMockModel();
+      modelStatus = 'loaded'; // Mock is also considered loaded
+      return model;
+    }
+  })();
+  
+  return modelLoadPromise;
 };
 
 /**
@@ -83,6 +90,11 @@ const preprocessImage = (imageElement: HTMLImageElement | HTMLCanvasElement): tf
 const predict = async (preprocessedImage: tf.Tensor): Promise<ModelPrediction[]> => {
   const modelToUse = await loadModel();
   
+  if (!modelToUse) {
+    console.error("Prediction failed: Model is not available.");
+    return generateMockPrediction();
+  }
+
   try {
     // Check if this is our mock model
     if (modelToUse.layers.length === 3 && modelToUse.name.startsWith('sequential')) { // Mock models are sequential
