@@ -25,7 +25,7 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
   const CONFIDENCE_THRESHOLD = 0.6;
 
   // Start and stop webcam logic
-  const handleStartWebcam = useCallback(async () => {
+  const startWebcamWithFacingMode = useCallback(async (mode: 'user' | 'environment') => {
     setError(null);
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       try {
@@ -34,7 +34,7 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
           video: {
             width: { ideal: 640 },
             height: { ideal: 480 },
-            facingMode: facingMode, // Use string, not { exact: ... }
+            facingMode: mode,
           },
         });
         if (videoRef.current) {
@@ -59,7 +59,11 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
       setError("Your browser does not support webcam access.");
       setWebcamActive(false);
     }
-  }, [facingMode]);
+  }, []);
+
+  const handleStartWebcam = useCallback(async () => {
+    startWebcamWithFacingMode(facingMode);
+  }, [facingMode, startWebcamWithFacingMode]);
 
   const handleStopWebcam = useCallback(() => {
     if (streamRef.current) {
@@ -94,37 +98,24 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
     setIsMobile(mobile);
   }, []);
 
-  const handleSwitchCamera = useCallback(async () => {
+  const handleSwitchCamera = useCallback(() => {
     if (!isMobile || availableCameras.length < 2) return;
-    const newFacingMode = facingMode === 'user' ? 'environment' : 'user';
-    setFacingMode(newFacingMode);
+    setFacingMode((prev) => (prev === 'user' ? 'environment' : 'user'));
+  }, [isMobile, availableCameras.length]);
+
+  // Reactively restart webcam stream when facingMode changes and webcam is active
+  useEffect(() => {
     if (webcamActive) {
       // Stop current stream
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
       }
-      // Request new stream with updated facingMode
-      try {
-        setIsModelLoading(true);
-        const newStream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            width: { ideal: 640 },
-            height: { ideal: 480 },
-            facingMode: newFacingMode,
-          },
-        });
-        if (videoRef.current) {
-          videoRef.current.srcObject = newStream;
-        }
-        streamRef.current = newStream;
-      } catch (err) {
-        setError('An error occurred while switching the camera.');
-      } finally {
-        setIsModelLoading(false);
-      }
+      // Start new stream with updated facingMode
+      startWebcamWithFacingMode(facingMode);
     }
-  }, [webcamActive, facingMode, isMobile, availableCameras.length]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [facingMode]);
 
   // Main prediction loop using setInterval
   useEffect(() => {
