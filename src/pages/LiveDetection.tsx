@@ -110,28 +110,76 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
     setIsMobile(mobile);
   }, []);
 
-  // Switch camera handler: proper restart approach
+  // Switch camera handler: seamless switching
   const handleSwitchCamera = useCallback(async () => {
     if (!isMobile || availableCameras.length < 2 || !webcamActive) return;
     
+    setIsModelLoading(true);
+    setError(null);
+    
     try {
-      // Stop current stream first
-      stopStream();
+      // Stop current stream and clear intervals
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
       
       // Switch facing mode
       const newFacingMode = facingMode === 'user' ? 'environment' : 'user';
       setFacingMode(newFacingMode);
       
-      // Wait a bit for cleanup
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Wait for cleanup to complete
+      await new Promise(resolve => setTimeout(resolve, 200));
       
-      // Start with new facing mode
-      await startWebcamWithFacingMode(newFacingMode);
+      // Get new stream with the new facing mode
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: newFacingMode,
+        },
+      });
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+      
+      streamRef.current = stream;
+      
+      // Restart prediction interval
+      intervalRef.current = setInterval(async () => {
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        if (!video || !canvas || video.readyState !== 4) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        try {
+          const results = await processImageFromCanvas(canvas);
+          const highestConfidence = Math.max(...results.map((p: any) => p.confidence));
+          setIsNonJawCrusherPart(highestConfidence < CONFIDENCE_THRESHOLD);
+          setPredictions(results);
+        } catch (error) {
+          console.error('Prediction error:', error);
+        }
+      }, 1000);
+      
     } catch (error) {
       console.error('Error switching camera:', error);
       setError('Failed to switch camera. Please try again.');
+      setWebcamActive(false);
+    } finally {
+      setIsModelLoading(false);
     }
-  }, [isMobile, availableCameras.length, webcamActive, facingMode, stopStream, startWebcamWithFacingMode]);
+  }, [isMobile, availableCameras.length, webcamActive, facingMode]);
 
   // Main prediction loop using setInterval
   useEffect(() => {
@@ -200,7 +248,7 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
               {webcamActive ? (
                 <div className="relative">
                   <video
-                    key={facingMode}
+                    key={`${facingMode}-${webcamActive}`}
                     ref={videoRef}
                     autoPlay
                     playsInline
@@ -261,9 +309,10 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
                 {isMobile && availableCameras.length > 1 && (
                   <button
                     onClick={handleSwitchCamera}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 shadow-lg"
+                    disabled={isModelLoading}
+                    className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-slate-500 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 shadow-lg"
                   >
-                    Switch Camera
+                    {isModelLoading ? "Switching..." : "Switch Camera"}
                   </button>
                 )}
               </div>
