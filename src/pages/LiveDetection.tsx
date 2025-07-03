@@ -32,7 +32,7 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
           video: {
             width: { ideal: 640 },
             height: { ideal: 480 },
-            facingMode: { exact: facingMode },
+            facingMode: facingMode, // Use string, not { exact: ... }
           },
         });
         if (videoRef.current) {
