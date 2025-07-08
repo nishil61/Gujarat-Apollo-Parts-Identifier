@@ -14,15 +14,12 @@ const WebcamFeed: React.FC<WebcamFeedProps> = ({ onResults, onProcessingChange }
   const [error, setError] = useState<string | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
-  const [isMobile, setIsMobile] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const CONFIDENCE_THRESHOLD = 0.2;
-
-  // Check for available cameras and device type on component mount
+  // Check for available cameras on component mount
   useEffect(() => {
     const checkCameras = async () => {
       try {
@@ -35,10 +32,6 @@ const WebcamFeed: React.FC<WebcamFeedProps> = ({ onResults, onProcessingChange }
     };
 
     checkCameras();
-
-    // Robust mobile/tablet detection
-    const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    setIsMobile(mobile);
   }, []);
 
   const startWebcam = async () => {
@@ -127,8 +120,7 @@ const WebcamFeed: React.FC<WebcamFeedProps> = ({ onResults, onProcessingChange }
         canvas.height = video.videoHeight;
         ctx.drawImage(video, 0, 0);
         
-        let results = await processImageFromCanvas(canvas);
-        results = results.filter(r => r.confidence >= CONFIDENCE_THRESHOLD); // Filter
+        const results = await processImageFromCanvas(canvas);
         onResults(results);
       }
     } catch (err) {
@@ -143,6 +135,8 @@ const WebcamFeed: React.FC<WebcamFeedProps> = ({ onResults, onProcessingChange }
       stopWebcam();
     };
   }, []);
+
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
   return (
     <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700">

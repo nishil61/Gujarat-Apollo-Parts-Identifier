@@ -1,105 +1,158 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
-import Webcam from "react-webcam";
+import { useState, useRef, useCallback, useEffect } from "react";
+import * as tmImage from "@teachablemachine/image";
 import { Camera } from "lucide-react";
-import { DetectionResult } from "../types";
-import { processImageFromCanvas } from "../utils/modelUtils";
 
-interface LiveDetectionProps {
-  isModelReady?: boolean;
+// Define the structure for a prediction
+interface Prediction {
+  className: string;
+  probability: number;
 }
 
-const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
+const LiveDetection = () => {
   const [webcamActive, setWebcamActive] = useState(false);
-  const [isModelLoading, setIsModelLoading] = useState(false);
+  const [isModelLoading, setIsModelLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [predictions, setPredictions] = useState<DetectionResult[]>([]);
+  const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [isNonJawCrusherPart, setIsNonJawCrusherPart] = useState(false);
-  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
-  const [isMobile, setIsMobile] = useState(false);
-  const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
-  const webcamRef = useRef<Webcam>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const modelRef = useRef<tmImage.CustomMobileNet | null>(null);
+  const requestRef = useRef<number | undefined>(undefined);
 
-  const CONFIDENCE_THRESHOLD = 0.6;
+  // Confidence threshold for determining if it's a jaw crusher part
+  const CONFIDENCE_THRESHOLD = 0.6; // Adjust this value as needed
 
-  useEffect(() => {
-    const checkCameras = async () => {
+  // Load the model
+  const loadModel = useCallback(async () => {
+    setIsModelLoading(true);
+    try {
+      // Load model files from public directory
+      const modelURL = "/models/model.json";
+      const metadataURL = "/models/metadata.json";
+      
+      console.log("Attempting to load model from:", modelURL);
+      console.log("Attempting to load metadata from:", metadataURL);
+      
+      // First, verify the files are accessible
       try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const cameras = devices.filter(device => device.kind === 'videoinput');
-        setAvailableCameras(cameras);
-      } catch (err) {
-        console.error('Error enumerating devices:', err);
+        const modelResponse = await fetch(modelURL);
+        const metadataResponse = await fetch(metadataURL);
+        
+        if (!modelResponse.ok) {
+          throw new Error(`Model file not found: ${modelResponse.status} ${modelResponse.statusText}`);
+        }
+        if (!metadataResponse.ok) {
+          throw new Error(`Metadata file not found: ${metadataResponse.status} ${metadataResponse.statusText}`);
+        }
+        
+        console.log("Model files are accessible, proceeding with TensorFlow.js loading...");
+      } catch (fetchError) {
+        console.error("File accessibility check failed:", fetchError);
+        const errorMessage = fetchError instanceof Error ? fetchError.message : String(fetchError);
+        throw new Error(`Cannot access model files: ${errorMessage}`);
       }
-    };
-    checkCameras();
-    const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    setIsMobile(mobile);
+      
+      const model = await tmImage.load(modelURL, metadataURL);
+      modelRef.current = model;
+      console.log("Model loaded successfully!");
+      console.log("Model classes:", model.getClassLabels());
+      setError(null); // Clear any previous errors on successful load
+    } catch (err) {
+      console.error("Detailed model loading error:", err);
+      let detailedError = "Failed to load the detection model.";
+      
+      if (err instanceof Error) {
+        if (err.message.includes("Cannot access model files")) {
+          detailedError = `${err.message}. Please ensure the model files are in the public/models/ directory and the development server is running.`;
+        } else if (err.message.includes("fetch")) {
+          detailedError = "Network error while loading model files. Please check your connection and try again.";
+        } else {
+          detailedError = `Model loading error: ${err.message}. Please check the browser console for more details.`;
+        }
+      }
+      
+      setError(detailedError);
+    } finally {
+      setIsModelLoading(false);
+    }
   }, []);
 
-  const handleStartWebcam = useCallback(() => {
-    setWebcamActive(true);
-    setError(null);
+  // Prediction loop
+  const predictLoop = useCallback(async () => {
+    if (modelRef.current && videoRef.current) {
+      const prediction = await modelRef.current.predict(videoRef.current);
+      
+      // Check if the highest confidence prediction is below threshold
+      const highestConfidence = Math.max(...prediction.map(p => p.probability));
+      const isNonPart = highestConfidence < CONFIDENCE_THRESHOLD;
+      
+      setIsNonJawCrusherPart(isNonPart);
+      setPredictions(prediction);
+      requestRef.current = requestAnimationFrame(predictLoop);
+    }
   }, []);
+
+  const handleStartWebcam = useCallback(async () => {
+    setError(null);
+
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+          },
+        });
+        streamRef.current = stream;
+        setWebcamActive(true);
+        requestRef.current = requestAnimationFrame(predictLoop); // Start prediction loop
+      } catch (err: any) {
+        console.error("Error accessing webcam:", err);
+        let message = "An error occurred while accessing the webcam.";
+        if (err.name === "NotAllowedError") {
+          message = "Webcam access was denied. Please allow camera access in your browser settings.";
+        } else if (err.name === "NotFoundError") {
+          message = "No webcam found. Please ensure a camera is connected and enabled.";
+        }
+        setError(message);
+        setWebcamActive(false);
+      }
+    } else {
+      setError("Your browser does not support webcam access.");
+      setWebcamActive(false);
+    }
+  }, [predictLoop]);
 
   const handleStopWebcam = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
     setWebcamActive(false);
-    setPredictions([]);
-    setIsNonJawCrusherPart(false);
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
+    setPredictions([]); // Clear predictions
+    setIsNonJawCrusherPart(false); // Reset non-part detection
+    if (requestRef.current) {
+      cancelAnimationFrame(requestRef.current); // Stop prediction loop
     }
   }, []);
 
-  const handleSwitchCamera = useCallback(() => {
-    if (!isMobile || availableCameras.length < 2 || !webcamActive) return;
-    setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
-  }, [isMobile, availableCameras.length, webcamActive]);
-
-  // Main prediction loop using setInterval
+  // Attaches the stream to the video element when the webcam becomes active
   useEffect(() => {
-    if (webcamActive && webcamRef.current) {
-      intervalRef.current = setInterval(async () => {
-        const webcam = webcamRef.current;
-        const canvas = canvasRef.current;
-        if (!webcam || !canvas) return;
-        const video = webcam.video as HTMLVideoElement;
-        if (!video || video.readyState !== 4) return;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        try {
-          const results = await processImageFromCanvas(canvas);
-          const highestConfidence = Math.max(...results.map((p: any) => p.confidence));
-          setIsNonJawCrusherPart(highestConfidence < CONFIDENCE_THRESHOLD);
-          setPredictions(results);
-        } catch (error) {
-          console.error('Prediction error:', error);
-        }
-      }, 1000);
-      return () => {
-        if (intervalRef.current) clearInterval(intervalRef.current);
-      };
+    if (webcamActive && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
     }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [webcamActive, facingMode]);
+  }, [webcamActive]);
 
-  if (isModelLoading || isModelReady === false) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p>Loading AI model...</p>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    loadModel(); // Load model on component mount
+    // Stop webcam on component unmount
+    return () => {
+      handleStopWebcam();
+    };
+  }, [handleStopWebcam, loadModel]);
 
   return (
     <div className="p-4 grid md:grid-cols-2 gap-4">
@@ -112,19 +165,13 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
             <div className="mb-4">
               {webcamActive ? (
                 <div className="relative">
-                  <Webcam
-                    key={facingMode + String(webcamActive)}
-                    ref={webcamRef}
-                    audio={false}
-                    screenshotFormat="image/jpeg"
-                    videoConstraints={{
-                      width: 640,
-                      height: 480,
-                      facingMode: facingMode,
-                    }}
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
                     className="w-full h-96 object-cover rounded-md border-2 border-slate-400"
                   />
-                  <canvas ref={canvasRef} className="hidden" />
                   <div className="absolute top-4 right-4">
                     <div className="flex items-center space-x-2 bg-red-600 text-white px-3 py-1 rounded-full text-sm">
                       <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
@@ -168,23 +215,12 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
                 {isModelLoading ? "Loading Model..." : "Start Webcam"}
               </button>
             ) : (
-              <div className="flex flex-col space-y-4">
-                <button
-                  onClick={handleStopWebcam}
-                  className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 shadow-lg"
-                >
-                  Stop Webcam
-                </button>
-                {isMobile && availableCameras.length > 1 && (
-                  <button
-                    onClick={handleSwitchCamera}
-                    disabled={isModelLoading}
-                    className="w-full bg-red-600 hover:bg-red-700 disabled:bg-slate-500 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 shadow-lg"
-                  >
-                    {isModelLoading ? "Switching..." : "Switch Camera"}
-                  </button>
-                )}
-              </div>
+              <button
+                onClick={handleStopWebcam}
+                className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 shadow-lg"
+              >
+                Stop Webcam
+              </button>
             )}
           </div>
         </div>
@@ -212,21 +248,21 @@ const LiveDetection = ({ isModelReady }: LiveDetectionProps) => {
                 {predictions.map((p, i) => (
                   <div key={i} className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-white font-medium">{p.label}</span>
+                      <span className="text-white font-medium">{p.className}</span>
                       <span className="font-mono text-sm text-slate-300">
-                        {(p.confidence * 100).toFixed(2)}%
+                        {(p.probability * 100).toFixed(2)}%
                       </span>
                     </div>
                     <div className="w-full bg-slate-700 rounded-full h-3 overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ease-out ${
-                          p.confidence > 0.7 
+                          p.probability > 0.7 
                             ? 'bg-gradient-to-r from-green-500 to-emerald-600' 
-                            : p.confidence > 0.4 
+                            : p.probability > 0.4 
                             ? 'bg-gradient-to-r from-yellow-500 to-orange-600' 
                             : 'bg-gradient-to-r from-red-500 to-red-600'
                         }`}
-                        style={{ width: `${p.confidence * 100}%` }}
+                        style={{ width: `${p.probability * 100}%` }}
                       ></div>
                     </div>
                   </div>
