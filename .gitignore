@@ -1,0 +1,195 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Vite specific
+.vite/
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Cache directories
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+.nyc_output/
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Yarn
+.yarn/
+.yarn-integrity
+yarn-error.log*
+
+# Package managers
+.pnpm-store/
+.pnpm-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# Deployment platforms
+.vercel/
+.netlify/
+.firebase/
+firebase-debug.log*
+firebase-debug.*.log*
+
+# TensorFlow.js model files (uncomment if you don't want to include trained models)
+# /public/models/
+# /models/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Editor directories and files
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+*.swo
+*~
+
+# JetBrains IDEs
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+Session.vim
+.netrwhist
+
+# Emacs
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*~
+
+# Logs
+logs/
+*.log
+lerna-debug.log*
+
+# Serverless directories
+.serverless/
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test/
+
+# Storybook build outputs
+.out/
+.storybook-out/
+storybook-static/
+
+# Temporary folders
+tmp/
+temp/
+
+# Hot Module Replacement
+.hot-update.*
+
+# Prettier cache
+.prettiercache
+
+# Rollup cache
+.rollup.cache/
+
+# Turbo
+.turbo/
+
+# Local development database
+*.db
+*.sqlite
+*.sqlite3
+
+# Misc
+*.orig
+*.rej
+
+# Generated files
+generated/
+auto-generated/
+
+# Test files (if you don't want to include tests)
+# __tests__/
+# *.test.js
+# *.test.ts
+# *.spec.js
+# *.spec.ts
+
+# Documentation build
+docs/build/
+
+# Husky
+.husky/_/
