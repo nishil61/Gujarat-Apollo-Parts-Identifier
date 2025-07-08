@@ -8,9 +8,9 @@ import LoadingScreen from './components/LoadingScreen';
 import AboutUs from './components/AboutUs';
 import HowToUse from './components/HowToUse';
 import Navigation from './components/Navigation';
-import LiveDetection from '../../src/pages/LiveDetection';
+import LiveDetection from './pages/LiveDetection';
 import { DetectionResult } from './types';
-import { initializeTensorFlow, loadTeachableMachineModel } from './utils/modelUtils';
+import { initializeTensorFlow, loadTeachableMachineModel, testRoboflowConnection } from './utils/modelUtils';
 
 type ActiveTab = 'detection' | 'about' | 'howto';
 
@@ -22,17 +22,38 @@ function App() {
   const [isInitializing, setIsInitializing] = useState(true);
   const [isModelReady, setIsModelReady] = useState(false);
   const [isNonJawCrusherPart, setIsNonJawCrusherPart] = useState(false);
+  const [roboflowReady, setRoboflowReady] = useState(false);
 
   useEffect(() => {
     const initialize = async () => {
       try {
+        // Initialize TensorFlow.js for fallback models
         await initializeTensorFlow();
-        await loadTeachableMachineModel();
+        
+        // Test Roboflow connection
+        console.log('Testing Roboflow connection...');
+        const roboflowTest = await testRoboflowConnection();
+        setRoboflowReady(roboflowTest);
+        
+        if (roboflowTest) {
+          console.log('✓ Roboflow YOLO model is ready!');
+        } else {
+          console.log('⚠ Roboflow unavailable, loading Teachable Machine as fallback...');
+          await loadTeachableMachineModel();
+        }
+        
         setIsModelReady(true);
         // Add a small delay to show the loading screen
         await new Promise(resolve => setTimeout(resolve, 1500));
       } catch (error) {
         console.error('Failed to initialize:', error);
+        // Try to load Teachable Machine as fallback
+        try {
+          await loadTeachableMachineModel();
+          setIsModelReady(true);
+        } catch (fallbackError) {
+          console.error('Fallback model also failed:', fallbackError);
+        }
       } finally {
         setIsInitializing(false);
       }
@@ -84,7 +105,6 @@ function App() {
                       <ImageUpload 
                         onResults={handleUploadResults}
                         onProcessingChange={handleProcessingChange}
-                        isModelReady={isModelReady}
                       />
                     </div>
                     

@@ -20,6 +20,8 @@ const WebcamFeed: React.FC<WebcamFeedProps> = ({ onResults, onProcessingChange }
   const streamRef = useRef<MediaStream | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  const CONFIDENCE_THRESHOLD = 0.2;
+
   // Check for available cameras and device type on component mount
   useEffect(() => {
     const checkCameras = async () => {
@@ -125,7 +127,8 @@ const WebcamFeed: React.FC<WebcamFeedProps> = ({ onResults, onProcessingChange }
         canvas.height = video.videoHeight;
         ctx.drawImage(video, 0, 0);
         
-        const results = await processImageFromCanvas(canvas);
+        let results = await processImageFromCanvas(canvas);
+        results = results.filter(r => r.confidence >= CONFIDENCE_THRESHOLD); // Filter
         onResults(results);
       }
     } catch (err) {

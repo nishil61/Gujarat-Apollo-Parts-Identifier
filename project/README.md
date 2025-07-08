@@ -5,7 +5,7 @@
 ![TensorFlow.js](https://img.shields.io/badge/TensorFlow.js-4.x-orange)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)
 
-An AI-powered image processing system to automate the recognition and classification of mechanical parts for Gujarat Apollo Industries Ltd. This modern web application streamlines inventory management, reduces human error, and improves assembly accuracy with an intuitive, production-ready interface for real-time part identification.
+An AI-powered image processing system to automate the recognition and classification of mechanical parts for Gujarat Apollo Industries Ltd. This modern web application streamlines inventory management, reduces human error, and improves assembly accuracy with an intuitive, production-ready interface for real-time part identification using YOLO object detection.
 
 ## ✨ Features
 
@@ -13,9 +13,11 @@ An AI-powered image processing system to automate the recognition and classifica
 - **🚀 Real-time Analysis**: Instant feedback with confidence scores and animated progress bars
 - **💎 Modern UI/UX**: Beautiful, professional interface with glass morphism effects
 - **📱 Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
-- **🧠 AI-Powered**: Custom TensorFlow.js model integration with Teachable Machine support
+- **🧠 AI-Powered**: YOLO object detection with precise bounding boxes and Teachable Machine fallback
 - **⚡ High Performance**: Optimized WebGL backend for fast inference
 - **🔄 Live Processing**: Continuous webcam analysis with dynamic results updating
+- **📦 Object Detection**: Real-time bounding box visualization with multi-object detection
+- **🎨 Visual Feedback**: Animated bounding boxes with color-coded part identification
 
 ## 🚀 Getting Started
 
@@ -73,9 +75,78 @@ This application can be easily deployed to various free platforms:
 - **GitHub Pages**: Enable in repository settings
 - **Firebase Hosting**: Use Firebase CLI
 
-## 🧠 Creating Your Custom Model
+## 🧠 AI Model Integration
 
-### Using Teachable Machine (Recommended)
+### 🎯 Roboflow YOLO Object Detection (Primary)
+**True Multiple Object Detection with Precise Bounding Boxes**
+
+- **Model**: `jaw-crusher-parts-identification/3`
+- **API**: Roboflow Inference API
+- **Features**: 
+  - Real-time bounding box detection
+  - Multi-object recognition
+  - High accuracy part identification
+  - Live webcam processing
+  - Batch image processing
+
+**Configuration**:
+```typescript
+// Already configured in roboflowService.ts
+const API_KEY = "k0YqQQHbnNVdI9tnKzL6";
+const MODEL_URL = "jaw-crusher-parts-identification/3";
+```
+
+**Supported Parts**:
+- Jaw plates
+- Toggle plates  
+- Eccentric shaft
+- Bearings
+- Springs
+- Pitman
+- Cheek plates
+- Flywheel
+
+### 📦 Teachable Machine (Fallback)
+**Classification-based Detection with Grid Simulation**
+
+- **Purpose**: Fallback when Roboflow API is unavailable
+- **Method**: Grid-based pseudo object detection
+- **Files**: Located in `/public/models/`
+
+**Model Files Structure**:
+```
+public/models/
+├── model.json     (Teachable Machine model)
+├── metadata.json  (Class labels and settings)
+└── weights.bin    (Model weights)
+```
+
+## 🔄 Detection Modes
+
+### 1. **Live Detection** (Recommended)
+- Real-time webcam processing with YOLO
+- Bounding box overlay visualization
+- Confidence scoring
+- Automatic Google Sheets logging
+
+### 2. **Image Upload**
+- Batch processing with YOLO
+- Drag-and-drop interface
+- Detailed results analysis
+- Bounding box visualization
+
+### 3. **Grid Detection** (Fallback)
+- Teachable Machine with 3x3 grid simulation
+- Pseudo bounding boxes
+- Legacy compatibility mode
+
+## 🎛️ User Interface Features
+
+- **Toggle Switch**: Switch between YOLO and Teachable Machine
+- **Live Overlay**: Real-time bounding boxes on webcam feed
+- **Color-coded Labels**: Different colors for each part type
+- **Confidence Indicators**: Percentage confidence display
+- **Detection Counter**: Live count of detected objects
 
 1. **Visit Teachable Machine**
    - Go to [teachablemachine.withgoogle.com](https://teachablemachine.withgoogle.com/)

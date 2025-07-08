@@ -1,0 +1,27 @@
+import React from 'react';
+import { Upload } from 'lucide-react';
+import { DetectionResult } from '../types';
+
+interface MultiplePartsUploadProps {
+  onResults: (results: DetectionResult[]) => void;
+  onProcessingChange: (processing: boolean) => void;
+}
+
+const MultiplePartsUpload: React.FC<MultiplePartsUploadProps> = () => {
+  return (
+    <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700">
+      <div className="flex items-center space-x-3 mb-6">
+        <div className="flex items-center justify-center w-10 h-10 bg-orange-500/20 rounded-lg">
+          <Upload className="w-5 h-5 text-orange-400" />
+        </div>
+        <h3 className="text-xl font-semibold text-white">Multiple Parts Upload</h3>
+      </div>
+      
+      <div className="text-center py-12">
+        <p className="text-slate-300">Multiple parts identification coming soon...</p>
+      </div>
+    </div>
+  );
+};
+
+export default MultiplePartsUpload;
