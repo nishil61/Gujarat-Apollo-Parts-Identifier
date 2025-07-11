@@ -137,11 +137,10 @@ For production, you may want to configure:
 
 **🎯 Supported Jaw Crusher Parts:**
 ```
-✅ Jaw Plates (Fixed & Movable)    ✅ Eccentric Shaft
-✅ Toggle Plates                   ✅ Bearings & Bushings  
-✅ Pitman Assembly                 ✅ Springs (Compression)
-✅ Cheek Plates                    ✅ Flywheel Assembly
-✅ Wedge Blocks                    ✅ Shims & Spacers
+✅ Jaw Plates                      ✅ Eccentric Shaft
+✅ Toggle Plates                   ✅ Bearings  
+✅ Pitman                          ✅ Springs
+✅ Cheek Plates                    ✅ Flywheel
 ```
 
 **🔧 API Configuration:**
