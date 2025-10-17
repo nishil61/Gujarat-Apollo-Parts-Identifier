@@ -6,354 +6,342 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)
 ![Google Sheets](https://img.shields.io/badge/Google-Sheets%20Integration-green)
 
-🚀 **Next-Generation AI-Powered Jaw Crusher Parts Recognition System**
+## Next-Generation AI-Powered Jaw Crusher Parts Recognition System
 
-An intelligent, production-ready web application designed specifically for **Gujarat Apollo Industries Ltd** to revolutionize jaw crusher parts identification. Built with cutting-edge YOLO object detection, real-time webcam processing, and automated data logging - this system transforms traditional manual part identification into a seamless, accurate, and efficient AI-powered workflow.
+This is a production-ready web application created for **Gujarat Apollo Industries Ltd** to streamline jaw crusher parts identification. Leveraging advanced YOLO object detection, real-time webcam analysis, and automated data logging, the system modernizes traditional manual identification into an efficient, AI-driven workflow.
 
-## 🌟 Why This Matters
+## Why This Matters
 
-In heavy machinery manufacturing, **accurate part identification** is critical for:
-- ⚡ **Faster Assembly**: Instant recognition eliminates guesswork
-- 🎯 **Zero Errors**: AI precision reduces costly assembly mistakes  
-- 📊 **Smart Inventory**: Automated logging tracks part usage patterns
-- 🔄 **Workflow Optimization**: Streamlined processes increase productivity
-- 💰 **Cost Reduction**: Minimizes manual inspection time and errors
+For heavy machinery manufacturing, correct part identification is critical for:
 
-## ✨ Advanced Features
+- Fast assembly: Instant recognition speeds up the process
+- Fewer errors: AI accuracy prevents costly mistakes  
+- Automated inventory: Usage patterns tracked automatically
+- Improved workflow: Streamlined identification increases productivity
+- Reduced costs: Less manual inspection saves time and money
 
-### 🎯 **Dual Detection Modes**
-- **📸 Image Upload**: Drag-and-drop or click to upload part images for batch analysis
-- **📹 Live Webcam**: Real-time continuous detection with full-screen webcam feed
-- **� Instant Processing**: Sub-second analysis with immediate visual feedback
+## Advanced Features
 
-### 🧠 **AI-Powered Recognition**
-- **🎯 YOLO Object Detection**: Roboflow-trained model specifically for jaw crusher parts
-- **� Multi-Part Detection**: Identifies multiple parts simultaneously with individual bounding boxes
-- **🏷️ Smart Labeling**: Automatic part names with confidence percentages
-- **🎨 Visual Overlay**: Color-coded bounding boxes with real-time positioning
+### Dual Detection Modes
 
-### 🎛️ **User-Adjustable Confidence Control** 
-- **� Dynamic Threshold Slider**: Adjust detection sensitivity from 30% to 95%
-- **⚡ Quick Presets**: One-click options for Sensitive (50%), Balanced (70%), or Strict (85%)
-- **🎯 Real-time Adjustment**: Changes apply instantly to live detection
-- **💡 Smart Guidance**: Built-in explanations help users understand trade-offs
+- Image upload: Drag and drop or click to upload images for batch analysis
+- Live webcam: Continuous real-time detection with full-screen camera feed
+- Instant processing: Immediate feedback in less than a second
 
-### 📋 **Automated Data Logging**
-- **📊 Google Sheets Integration**: Every detection automatically logged with timestamp
-- **📈 Detailed Analytics**: Part name, confidence score, detection source, and time
-- **🔄 Smart Cooldown**: Prevents spam logging with 5-second intervals per part
-- **💾 Persistent Records**: Build comprehensive part usage databases over time
+### AI-Powered Recognition
 
-### 🎨 **Premium User Experience**
-- **� Responsive Design**: Optimized for desktop, tablet, and mobile devices
-- **🌓 Modern UI**: Professional dark theme with glass morphism effects
-- **⚡ Smooth Animations**: Fluid transitions and micro-interactions
-- **🎯 Intuitive Navigation**: Clean, industrial-grade interface design
-- **🔧 Professional Controls**: Settings panel with gear icon and clear labeling
+- YOLO object detection: Roboflow-trained model tuned for jaw crusher parts
+- Multi-part detection: Identifies several parts at once with bounding boxes
+- Smart labeling: Automatic part names and confidence percentages
+- Visual overlay: Color-coded boxes show detection position
 
-## 🚀 Quick Start
+### User-Adjustable Confidence Control
 
-### 📋 Prerequisites
+- Adjustable threshold slider: Sensitivity configurable from 30% to 95%
+- Quick presets: Sensitive (50%), Balanced (70%), Strict (85%)
+- Real-time adjustment: Changes apply immediately
+- Guidance: Built-in explanations about sensitivity levels
 
-- **Node.js 18+** - [Download here](https://nodejs.org/)
-- **Modern Web Browser** - Chrome, Firefox, Safari, or Edge
-- **Webcam** (for live detection feature)
-- **Internet Connection** (for Roboflow API and Google Sheets logging)
+### Automated Data Logging
 
-### ⚡ Installation & Setup
+- Google Sheets integration: Detections logged automatically with timestamps
+- Detailed analytics: Records part name, confidence, detection method, and time
+- Smart cooldown: Avoids duplicate logs with 5-second intervals per part
+- Persistent records: Building a long-term parts usage database
 
-1. **📥 Clone the Repository**
-   ```bash
+### Premium User Experience
+
+- Responsive design optimized for desktop, mobile, and tablet
+- Modern UI: Professional dark theme with glass morphism effects
+- Smooth animations: Fluid transitions and subtle interactions
+- Intuitive navigation: Clean layout, clear labeling, and a well-organized controls panel
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- Web browser (Chrome, Firefox, Safari, or Edge)
+- Webcam for live detection
+- Internet connection (for Roboflow API and Google Sheets logging)
+
+### Installation & Setup
+
+1. Clone the repository
+   ```
    git clone <repository-url>
    cd Gujarat-Apollo-Parts-Identifier-main/project
    ```
-
-2. **📦 Install Dependencies**
-   ```bash
+2. Install dependencies
+   ```
    npm install
    ```
-
-3. **🚀 Start Development Server**
-   ```bash
+3. Start the development server
+   ```
    npm run dev
    ```
+4. Open your browser and visit `http://localhost:5173` to start identifying parts
 
-4. **🌐 Open Your Browser**
-   
-   Navigate to `http://localhost:5173` and start identifying parts!
+### Immediate Use
 
-### 🎯 Immediate Use
-- **No Setup Required**: The app works immediately with the pre-trained YOLO model
-- **Demo Mode**: Test with sample images or your webcam right away
-- **Google Sheets**: Logging works out-of-the-box with pre-configured spreadsheet
+- Works instantly with a pre-trained YOLO model
+- Demo mode: Test with sample images or webcam
+- Google Sheets logging is functional out-of-the-box
 
-## 🏗️ Production Deployment
+## Production Deployment
 
-### 📦 Build for Production
+### Build for Production
 
-Create an optimized production build:
-
-```bash
+Create an optimized build:
+```
 npm run build
 ```
+Deploy files from the `dist/` folder.
 
-The `dist/` folder will contain all optimized files ready for deployment.
+### Deployment Options
 
-### 🌐 Deployment Options
+| Platform      | Setup                 | Features                              |
+|---------------|----------------------|---------------------------------------|
+| Vercel        | `vercel deploy`      | Auto-deploy, edge functions, domains  |
+| Netlify       | Drag & drop `dist/`  | Branch deploys, CDN, form handling    |
+| GitHub Pages  | Enable in settings   | Free hosting, custom domains          |
+| Firebase      | `firebase deploy`    | Global CDN, real-time features        |
 
-**🚀 Recommended Platforms:**
+### Environment Configuration
 
-| Platform | Setup | Features |
-|----------|-------|----------|
-| **Vercel** | `vercel deploy` | Auto-deploy, edge functions, custom domains |
-| **Netlify** | Drag & drop `dist/` | Branch deploys, form handling, CDN |
-| **GitHub Pages** | Enable in repo settings | Free hosting, custom domain support |
-| **Firebase** | `firebase deploy` | Global CDN, real-time features |
+Configurable for production:
+- Custom Google Sheets API endpoints
+- Roboflow rate limiting
+- Analytics integration
+- Error monitoring tools
 
-### ⚙️ Environment Configuration
+## AI Architecture & Detection System
 
-For production, you may want to configure:
-- **Custom Google Sheets** endpoint
-- **Roboflow API** rate limiting
-- **Analytics** integration
-- **Error monitoring** (Sentry, LogRocket)
+### Primary: YOLO Object Detection (Roboflow)
 
-## 🧠 AI Architecture & Detection System
+**Industry-Grade Multi-Object Recognition**
 
-### 🎯 **Primary: YOLO Object Detection (Roboflow)**
-**🏆 Industry-Grade Multi-Object Recognition**
+- Model: `jaw-crusher-parts-identification/3`
+- API: Roboflow Inference
+- Real-time detection: sub-second response
+- Trained on jaw crusher parts dataset
 
-- **🔬 Model**: `jaw-crusher-parts-identification/3`
-- **🌐 API**: Roboflow Inference API  
-- **⚡ Performance**: Real-time detection with sub-second response
-- **🎯 Accuracy**: Trained specifically on jaw crusher parts dataset
+**Capabilities:**
+- Precise bounding boxes
+- Multiple part identification at once
+- Confidence scoring for each part
+- Visual overlays on live feed
+- Updates every second in webcam mode
 
-**✨ Capabilities:**
-- 🔍 **Precise Bounding Boxes**: Exact part location and dimensions
-- 🏷️ **Multi-Part Detection**: Simultaneous identification of multiple parts
-- 📊 **Confidence Scoring**: 0-100% accuracy confidence for each detection
-- 🎨 **Visual Overlay**: Real-time bounding box rendering on live feed
-- 🔄 **Continuous Processing**: 1-second interval updates for webcam mode
-
-**🎯 Supported Jaw Crusher Parts:**
+**Supported Jaw Crusher Parts:**
 ```
-✅ Jaw Plates                      ✅ Eccentric Shaft
-✅ Toggle Plates                   ✅ Bearings  
-✅ Pitman                          ✅ Springs
-✅ Cheek Plates                    ✅ Flywheel
+Jaw Plates, Eccentric Shaft, Toggle Plates, Bearings, Pitman, Springs, Cheek Plates, Flywheel
 ```
 
-**🔧 API Configuration:**
-```typescript
+**API Configuration:**
+```
 const ROBOFLOW_CONFIG = {
   apiKey: "k0YqQQHbnNVdI9tnKzL6",
   model: "jaw-crusher-parts-identification/3", 
-  confidence: 0.4, // Minimum threshold
-  overlap: 0.5     // NMS overlap threshold
+  confidence: 0.4,
+  overlap: 0.5
 };
 ```
 
-### � **Fallback: Teachable Machine (TensorFlow.js)**
-**📚 Local Processing with Grid Simulation**
+### Fallback: Teachable Machine (TensorFlow.js)
 
-- **🎯 Purpose**: Offline capability when API unavailable
-- **⚙️ Method**: Classification + grid-based pseudo-detection
-- **💾 Storage**: Local model files in `/public/models/`
-- **🎨 Visualization**: Simulated bounding boxes using 3x3 grid
+**Local Processing with Grid Simulation**
 
-**📁 Model Files Structure:**
+- Purpose: Offline use when API is unavailable
+- Classification and simulated bounding boxes with 3x3 visual grid
+- Model files stored in `/public/models/`
+
+**Model Files Structure:**
 ```
 public/models/
-├── model.json      # TensorFlow.js model architecture
-├── metadata.json   # Class labels and preprocessing config  
-├── weights.bin     # Pre-trained model weights
+├── model.json
+├── metadata.json
+├── weights.bin
 ```
 
-## � Google Sheets Integration & Data Analytics
+## Google Sheets Integration & Data Analytics
 
-### 📈 **Automated Logging System**
+### Automated Logging System
 
-Every part detection is automatically logged to Google Sheets for comprehensive analytics:
+Every detection is automatically logged for analysis:
 
-**📋 Data Points Captured:**
+**Data Points Captured:**
 ```
-📅 Timestamp          🏷️ Part Name
-📊 Confidence Score   📱 Detection Source  
-🎯 Threshold Used     🔢 Session ID
+Timestamp, Part Name, Confidence Score, Detection Source, Threshold Used, Session ID
 ```
 
-**🔄 Smart Logging Features:**
-- **⏱️ Cooldown System**: 5-second intervals prevent spam logging
-- **📊 Percentage Formatting**: Confidence automatically formatted (98.70%)
-- **🎯 Source Tracking**: Distinguishes between Webcam vs Image Upload
-- **💾 Persistent Storage**: Data preserved across browser sessions
+**Logging Features:**
+- 5-second cooldown prevents spam
+- Confidence scores formatted as percentages
+- Tracks source (webcam vs image upload)
+- Persistent across browser sessions
 
-**📈 Analytics Dashboard:**
-- **📊 Detection Frequency**: Most commonly identified parts
-- **🎯 Confidence Trends**: Average accuracy over time
-- **📱 Usage Patterns**: Peak detection times and methods
-- **🔍 Part Distribution**: Breakdown by part type
+**Analytics Dashboard:**
+- Detection frequency (most common parts)
+- Confidence trends (average over time)
+- Usage patterns (peak times, methods)
+- Part distribution
 
-### 🔧 **Configuration**
+### Configuration
 
-The Google Sheets integration is pre-configured but can be customized:
-
-```typescript
-// sheetLogger.ts configuration
+Can be customized:
+```
 const SHEET_CONFIG = {
   url: "https://docs.google.com/forms/d/e/...",
-  cooldownDuration: 5000, // 5 seconds
-  autoFormat: true        // Percentage formatting
+  cooldownDuration: 5000,
+  autoFormat: true
 };
 ```
 
-## 💻 User Guide & Best Practices
+## User Guide & Best Practices
 
-### 📸 **Image Upload Mode**
-1. **📁 Select File**: Click "Upload Images" tab
-2. **🖱️ Drag & Drop**: Drop image files or click to browse
-3. **🔍 Analyze**: Click "Identify Parts" for instant analysis
-4. **📊 Review Results**: View detected parts with confidence scores
-5. **❌ Remove**: Click X button to clear and try another image
+### Image Upload Mode
+1. Click "Upload Images"
+2. Drag-and-drop or browse files
+3. Click "Identify Parts"
+4. Review detected results
+5. Remove and retry if needed
 
-**💡 Tips for Best Results:**
-- 📷 Use **high-resolution images** (1280x720 or higher)
-- 💡 Ensure **good lighting** and clear part visibility
-- 🎯 Position parts **clearly in frame** without overlap
-- 🔄 Try different **angles** if detection is low
+**Tips for Best Results:**
+- Use high-resolution images (1280x720 or better)
+- Good lighting and part visibility
+- Parts positioned clearly, avoid overlap
+- Try varied angles
 
-### 📹 **Live Webcam Mode** ⭐ *Recommended*
-1. **📹 Start Camera**: Click "Live Detection" tab
-2. **🔐 Grant Permissions**: Allow webcam access when prompted
-3. **▶️ Begin Detection**: Click "Start Webcam" 
-4. **🎛️ Adjust Threshold**: Use slider to set detection sensitivity
-5. **🎯 Position Parts**: Hold parts clearly in camera view
-6. **📊 View Results**: Real-time detection with confidence scores
+### Live Webcam Mode (Recommended)
+1. Click "Live Detection"
+2. Allow webcam access
+3. Click "Start Webcam"
+4. Adjust detection threshold if needed
+5. Hold part in front of camera
+6. View results in real time
 
-**🎛️ Confidence Threshold Control:**
-- **🟢 Sensitive (50%)**: Catches more parts, may include false positives
-- **🟡 Balanced (70%)**: Good middle ground for most situations  
-- **🔴 Strict (85%)**: High confidence only, fewer false positives
-- **🎚️ Custom**: Use slider for precise control (30-95%)
+**Threshold Control:**
+- Sensitive (50%): more results, possible false positives
+- Balanced (70%): recommended for most uses
+- Strict (85%): very high confidence
+- Custom slider (30–95%)
 
-### 📱 **Mobile Usage**
-- **📱 Portrait Mode**: Optimized mobile interface
-- **🔄 Camera Switch**: Toggle front/rear camera on mobile devices
-- **👆 Touch Controls**: Tap to adjust settings and thresholds
-- **📊 Full Screen**: Webcam uses full width for better visibility
+### Mobile Usage
 
-## 🏗️ Technical Architecture
+- Portrait mode support
+- Switch cameras (front/rear)
+- Touch controls for settings
+- Full screen webcam
 
-### 🎨 **Frontend Stack**
-```typescript
-⚛️  React 18           // Modern component architecture
-🔷  TypeScript 5.x     // Type-safe development  
-🎨  Tailwind CSS       // Utility-first styling
-📹  react-webcam       // Camera integration
-🎯  Lucide React       // Professional iconography
-⚡  Vite              // Lightning-fast dev server
+## Technical Architecture
+
+### Frontend Stack
+```
+React 18         // Component framework
+TypeScript 5.x   // Type-safe programming
+Tailwind CSS     // Styling
+react-webcam     // Webcam integration
+Lucide React     // Icons
+Vite             // Build tool
 ```
 
-### 🧠 **AI/ML Pipeline**
-```typescript
-🎯  Roboflow YOLO     // Primary object detection
-🧠  TensorFlow.js     // Fallback classification  
-🖼️  Canvas API        // Image preprocessing
-📹  MediaDevices API  // Webcam stream handling
-⚡  WebGL Backend     // GPU acceleration
+### AI/ML Pipeline
+```
+Roboflow YOLO    // Primary object detection
+TensorFlow.js    // Fallback model
+Canvas API       // Image preprocessing
+MediaDevices API // Webcam handling
+WebGL Backend    // GPU acceleration
 ```
 
-### 📁 **Project Structure**
+### Project Structure
 ```
 Gujarat-Apollo-Parts-Identifier-main/
-├── project/                    # 🎯 Main application
+├── project/
 │   ├── src/
-│   │   ├── components/        # React UI components
-│   │   │   ├── Header.tsx     # App header & navigation
-│   │   │   ├── Hero.tsx       # Landing section
-│   │   │   ├── ImageUpload.tsx # File upload & analysis
-│   │   │   ├── Navigation.tsx  # Tab switching
-│   │   │   ├── ResultsDisplay.tsx # Detection results
-│   │   │   ├── BoundingBoxOverlay.tsx # Visual overlays
-│   │   │   └── LoadingScreen.tsx # Initialization UI
+│   │   ├── components/
+│   │   │   ├── Header.tsx
+│   │   │   ├── Hero.tsx
+│   │   │   ├── ImageUpload.tsx
+│   │   │   ├── Navigation.tsx
+│   │   │   ├── ResultsDisplay.tsx
+│   │   │   ├── BoundingBoxOverlay.tsx
+│   │   │   └── LoadingScreen.tsx
 │   │   ├── pages/
-│   │   │   ├── LiveDetection.tsx # Webcam mode
+│   │   │   ├── LiveDetection.tsx
 │   │   │   └── MultiplePartsIdentification.tsx
 │   │   ├── services/
-│   │   │   └── roboflowService.ts # YOLO API integration
+│   │   │   └── roboflowService.ts
 │   │   ├── utils/
-│   │   │   ├── modelUtils.ts     # TensorFlow utilities  
-│   │   │   └── sheetLogger.ts    # Google Sheets logging
+│   │   │   ├── modelUtils.ts
+│   │   │   └── sheetLogger.ts
 │   │   ├── types/
-│   │   │   └── index.ts          # TypeScript definitions
-│   │   ├── index.css            # Global styles
-│   │   ├── slider-styles.css    # Custom slider styling
-│   │   └── App.tsx              # Main app component
+│   │   │   └── index.ts
+│   │   ├── index.css
+│   │   ├── slider-styles.css
+│   │   └── App.tsx
 │   ├── public/
-│   │   └── models/              # TensorFlow.js fallback models
-│   ├── package.json             # Dependencies & scripts
-│   └── vite.config.ts          # Build configuration
-└── vercel.json                 # Deployment config
+│   │   └── models/
+│   ├── package.json
+│   └── vite.config.ts
+└── vercel.json
 ```
 
-### 🔄 **Data Flow Architecture**
+### Data Flow Architecture
 ```
-📷 Image/Webcam Input
-    ↓
-🔍 Roboflow YOLO API
-    ↓
-📦 Detection Results
-    ↓
-🎨 Bounding Box Overlay
-    ↓
-📊 Google Sheets Logging
-    ↓
-📈 Analytics Dashboard
+Image/Webcam Input
+      ↓
+Roboflow YOLO API
+      ↓
+Detection Results
+      ↓
+Bounding Box Overlay
+      ↓
+Google Sheets Logging
+      ↓
+Analytics Dashboard
 ```
 
-## ⚙️ Advanced Configuration & Customization
+## Advanced Configuration & Customization
 
-### 🎯 **Confidence Threshold Tuning**
+### Confidence Threshold Tuning
 
-Adjust detection sensitivity in `LiveDetection.tsx`:
-
-```typescript
-// Default settings optimized for jaw crusher parts
+Adjust sensitivity in `LiveDetection.tsx`:
+```
 const CONFIDENCE_SETTINGS = {
-  default: 0.8,        // 80% confidence
-  sensitive: 0.5,      // 50% - catches more parts
-  balanced: 0.7,       // 70% - good middle ground  
-  strict: 0.85,        // 85% - high precision
-  range: [0.3, 0.95]   // Slider min/max
+  default: 0.8,
+  sensitive: 0.5,
+  balanced: 0.7,
+  strict: 0.85,
+  range: [0.3, 0.95]
 };
 ```
 
-### 📊 **Google Sheets Customization**
+### Google Sheets Customization
 
-Modify logging behavior in `sheetLogger.ts`:
-
-```typescript
+Configure in `sheetLogger.ts`:
+```
 const LOGGING_CONFIG = {
-  cooldownDuration: 5000,     // 5 seconds between logs
-  confidenceFormat: 'decimal', // Send as 0.987, Sheets formats as %
-  batchSize: 1,               // Individual vs batch logging
-  retryAttempts: 3            // API failure retry count
+  cooldownDuration: 5000,
+  confidenceFormat: 'decimal',
+  batchSize: 1,
+  retryAttempts: 3
 };
 ```
 
-### 🎨 **UI Theme Customization**
+### UI Theme Customization
 
-Update colors and styling in `tailwind.config.js`:
-
-```javascript
+Edit `tailwind.config.js`:
+```
 module.exports = {
   theme: {
     extend: {
       colors: {
         apollo: {
-          50: '#f0f9ff',   // Light blue
-          500: '#3b82f6',  // Primary blue
-          900: '#1e293b'   // Dark slate
+          50: '#f0f9ff',
+          500: '#3b82f6',
+          900: '#1e293b'
         }
       }
     }
@@ -361,249 +349,224 @@ module.exports = {
 }
 ```
 
-### 🔧 **Model Integration**
+### Model Integration
 
-To integrate your own trained models:
+To use a custom-trained model:
+```
+// roboflowService.ts
+const API_KEY = "your-api-key";
+const MODEL_URL = "your-model/version";
+```
+Replace TensorFlow files in `/public/models/` as needed.
 
-1. **Replace Roboflow Model:**
-   ```typescript
-   // roboflowService.ts
-   const API_KEY = "your-api-key";
-   const MODEL_URL = "your-model/version";
-   ```
+## Performance & Optimization
 
-2. **Update TensorFlow.js Model:**
-   ```bash
-   # Replace files in public/models/
-   model.json      # Model architecture
-   metadata.json   # Class labels  
-   weights.bin     # Trained weights
-   ```
+### Speed Optimizations
 
-## 🚀 Performance & Optimization
+- YOLO inference responds in under a second
+- Webcam processes at 1-second intervals
+- Model responses cached locally
+- Efficient rendering updates only when changes detected
+- Lazy load heavy components for faster initial load
 
-### ⚡ **Speed Optimizations**
-- **🎯 YOLO Inference**: Sub-second detection response times
-- **⚡ Webcam Processing**: 1-second intervals for real-time feel
-- **💾 Model Caching**: Roboflow API responses cached locally  
-- **🔄 Smart Updates**: Only re-render when detections change
-- **📦 Code Splitting**: Lazy loading of heavy components
+### Memory Management
 
-### 💾 **Memory Management**
-- **🧹 Automatic Cleanup**: Canvas and tensor disposal after use
-- **⏱️ Cooldown System**: Prevents memory leaks from rapid logging
-- **📊 Efficient State**: Minimal re-renders with optimized React hooks
-- **🔄 Stream Management**: Proper webcam stream cleanup on unmount
+- Automatic cleanup of unused tensors and canvases
+- Smart logging cooldown for efficiency
+- Optimized React state and hooks
+- Proper disposal of webcam streams
 
-### 📊 **Monitoring & Analytics**
-```typescript
-// Built-in performance tracking
+### Monitoring & Analytics
+```
 console.log(`Detection time: ${detectionTime}ms`);
 console.log(`Confidence: ${confidence.toFixed(3)}`);
 console.log(`Parts found: ${results.length}`);
 ```
 
-### 🔧 **Browser Compatibility**
-| Browser | Webcam | YOLO | Sheets | Status |
-|---------|--------|------|--------|--------|
-| **Chrome 90+** | ✅ | ✅ | ✅ | Recommended |
-| **Firefox 88+** | ✅ | ✅ | ✅ | Fully Supported |
-| **Safari 14+** | ✅ | ✅ | ✅ | Supported |
-| **Edge 90+** | ✅ | ✅ | ✅ | Supported |
+### Browser Compatibility
 
-## 🐛 Troubleshooting & Support
+| Browser        | Webcam | YOLO | Sheets | Status      |
+|----------------|--------|------|--------|-------------|
+| Chrome 90+     | Yes    | Yes  | Yes    | Recommended |
+| Firefox 88+    | Yes    | Yes  | Yes    | Supported   |
+| Safari 14+     | Yes    | Yes  | Yes    | Supported   |
+| Edge 90+       | Yes    | Yes  | Yes    | Supported   |
 
-### 🔧 **Common Issues & Solutions**
+## Troubleshooting & Support
 
-#### 📷 **Webcam Issues**
-**Problem**: Camera not working or "Permission denied"
-```bash
-✅ Solutions:
-• Grant camera permissions in browser settings
-• Ensure HTTPS connection (required for webcam)
-• Close other apps using camera (Zoom, Teams, etc.)
-• Try refreshing the page and re-granting permissions
+### Common Issues & Solutions
+
+#### Webcam
+*Problem*: Camera not working or permission denied
+```
+-  Grant camera access
+-  Use HTTPS
+-  Close other apps using the camera
+-  Refresh and retry
 ```
 
-#### 🌐 **API Connection Issues**  
-**Problem**: "Failed to detect parts" or network errors
-```bash
-✅ Solutions:
-• Check internet connection
-• Verify Roboflow API is accessible
-• Try again in a few minutes (rate limiting)
-• Use image upload mode if webcam fails
+#### API Connection
+*Problem*: Detection fails or network errors
+```
+-  Check internet connection
+-  Verify API accessibility
+-  Retry after some time
+-  Use image upload if webcam fails
 ```
 
-#### 📊 **Google Sheets Logging Issues**
-**Problem**: Detections not appearing in spreadsheet
-```bash
-✅ Solutions:
-• Wait 5 seconds between same part detections (cooldown)
-• Check browser console for error messages
-• Verify Google Sheets URL is accessible
-• Try with higher confidence threshold (>50%)
+#### Sheets Logging
+*Problem*: Data not appearing in Sheets
+```
+-  Wait 5 seconds between detections
+-  Check console for errors
+-  Verify Google Sheets URL
+-  Raise confidence threshold
 ```
 
-#### 🎯 **Low Detection Accuracy**
-**Problem**: Parts not being recognized or low confidence
-```bash
-✅ Solutions:
-• Improve lighting conditions
-• Clean camera lens or use higher resolution images
-• Lower confidence threshold (30-50%)
-• Try different angles and distances
-• Ensure parts are clearly visible and unobstructed
+#### Detection Accuracy
+*Problem*: Parts not recognized or low confidence
+```
+-  Improve lighting
+-  Clean lens, use high-res images
+-  Lower confidence threshold
+-  Adjust angle and distance
+-  Make parts clearly visible
 ```
 
-#### 📱 **Mobile Performance Issues**
-**Problem**: Slow performance on mobile devices
-```bash
-✅ Solutions:
-• Close other browser tabs/apps
-• Use image upload instead of live webcam
-• Lower image resolution if possible
-• Try in Chrome or Safari (best mobile support)
+#### Mobile Performance
+*Problem*: Slow on mobile
+```
+-  Close other browser tabs
+-  Use image upload mode
+-  Lower image resolution
+-  Prefer Chrome or Safari
 ```
 
-### 📋 **Debug Information**
+### Debug Information
 
-Enable debug mode by opening browser console (F12) to see:
-- Detection timing information
-- Confidence scores for all parts
-- API response details
-- Error messages and stack traces
+Open browser console for:
+- Detection timing
+- Confidence scores
+- API details
+- Errors or stack traces
 
-### 📞 **Getting Help**
+### Getting Help
 
-1. **🐛 Check Console**: Open browser DevTools (F12) for error details
-2. **📖 Documentation**: Review this README for configuration options
-3. **🔄 Try Different Settings**: Adjust confidence threshold and detection mode
-4. **📧 Report Issues**: Create detailed bug reports with:
-   - Browser version and OS
-   - Console error messages
-   - Steps to reproduce the problem
-   - Screenshots or videos if helpful
+1. Check console logs (F12)
+2. Review documentation (README, code comments)
+3. Adjust detection settings if needed
+4. Report issues with browser, OS, screenshots, and reproduction steps
 
-### ⚡ **Performance Tips**
+### Performance Tips
 
-**For Best Results:**
-- 💡 Use **good lighting** (avoid shadows and glare)
-- 📏 **Optimal distance**: 30-50cm from camera
-- 🎯 **Clear background**: Minimize visual distractions  
-- 🔄 **Steady positioning**: Hold parts still for 2-3 seconds
-- 📱 **Use landscape mode** on mobile devices
+- Good lighting, avoid shadows
+- Position 30-50cm from camera
+- Keep background clear
+- Hold item steady for 2-3 seconds
+- Use landscape mode on mobile
 
-## 🤝 Contributing & Development
+## Contributing & Development
 
-### 🔧 **Development Setup**
-
-```bash
-# 1. Fork and clone the repository
+### Development Setup
+```
 git clone <your-fork-url>
 cd Gujarat-Apollo-Parts-Identifier-main/project
-
-# 2. Install dependencies
 npm install
-
-# 3. Start development server
 npm run dev
-
-# 4. Open browser
-# Navigate to http://localhost:5173
+# Visit http://localhost:5173
 ```
 
-### 📋 **Development Scripts**
-
-```bash
-npm run dev          # Start development server
-npm run build        # Build for production  
-npm run preview      # Preview production build
-npm run lint         # Run ESLint checks
-npm type-check       # TypeScript type checking
+### Development Scripts
+```
+npm run dev       # Development server
+npm run build     # Production build
+npm run preview   # Preview production build
+npm run lint      # Lint checks
+npm type-check    # Type checks
 ```
 
-### 🎯 **Contributing Guidelines**
+### Contributing Guidelines
 
-1. **🐛 Bug Reports**: Include browser, OS, and reproduction steps
-2. **✨ Feature Requests**: Describe use case and expected behavior  
-3. **🔧 Pull Requests**: 
-   - Follow existing code style
-   - Add tests for new features
-   - Update documentation as needed
-   - Ensure all builds pass
+1. Bug reports: Include browser, OS, and steps
+2. Feature requests: Clearly describe use case
+3. Pull requests: 
+   - Match code style
+   - Include tests
+   - Update docs
+   - Pass all builds
 
-### 🏗️ **Architecture Principles**
+### Architecture Principles
 
-- **🎯 Component-First**: Reusable, testable React components
-- **📝 Type Safety**: Comprehensive TypeScript coverage
-- **⚡ Performance**: Optimize for real-time detection use cases
-- **📱 Mobile-First**: Responsive design for all devices
-- **🎨 Accessibility**: WCAG guidelines for inclusive design
+- Component-based React
+- Strong TypeScript typing
+- Optimized for real-time detection
+- Mobile-first design
+- Accessibility standards followed
 
-## 📜 License & Legal
+## License & Legal
 
-### 📄 **MIT License**
+### MIT License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Licensed under MIT — see the [LICENSE](LICENSE) file.
 
-### ⚖️ **Third-Party Services**
+### Third-Party Services
 
-- **Roboflow**: Object detection API - [Terms of Service](https://roboflow.com/terms)
-- **Google Sheets**: Data logging - [Privacy Policy](https://policies.google.com/privacy)
-- **TensorFlow.js**: ML framework - [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0)
+- Roboflow: Object detection API ([Terms of Service](https://roboflow.com/terms))
+- Google Sheets: Data logging ([Privacy Policy](https://policies.google.com/privacy))
+- TensorFlow.js: ML framework ([Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0))
 
-### 🏭 **Industrial Usage**
+### Industrial Usage
 
-This software is designed for industrial use at Gujarat Apollo Industries Ltd. For commercial licensing or enterprise support, please contact the development team.
+Designed for Gujarat Apollo Industries Ltd.  
+Contact developers for commercial/enterprise support.
 
-## 🙏 Acknowledgements & Credits
+## Acknowledgements & Credits
 
-### 🏭 **Industry Partner**
-- **[Gujarat Apollo Industries Ltd](https://www.apollo.co.in/)** - Problem definition, domain expertise, and real-world testing environment
+### Industry Partner
+- [Gujarat Apollo Industries Ltd](https://www.apollo.co.in/) — problem definition and testing
 
-### 🤖 **AI & Machine Learning**  
-- **[Roboflow](https://roboflow.com/)** - YOLO model training platform and inference API
-- **[Google Teachable Machine](https://teachablemachine.withgoogle.com/)** - Accessible ML model training
-- **[TensorFlow.js](https://www.tensorflow.org/js)** - Client-side machine learning framework
+### AI & Machine Learning  
+- [Roboflow](https://roboflow.com/) — YOLO training and inference
+- [Google Teachable Machine](https://teachablemachine.withgoogle.com/) — ML training
+- [TensorFlow.js](https://www.tensorflow.org/js) — client-side implementation
 
-### 🎨 **Frontend Technologies**
-- **[React](https://reactjs.org/)** - Component-based UI framework
-- **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first CSS framework  
-- **[Vite](https://vitejs.dev/)** - Next-generation build tool
-- **[Lucide](https://lucide.dev/)** - Beautiful icon library
+### Frontend Technologies
+- [React](https://reactjs.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Vite](https://vitejs.dev/)
+- [Lucide](https://lucide.dev/)
 
-### 👥 **Open Source Community**
-- **[TypeScript](https://www.typescriptlang.org/)** - Type-safe JavaScript development
-- **[Canvas API](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API)** - Image processing capabilities
-- **[MediaDevices API](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices)** - Webcam access
+### Open Source Community
+- [TypeScript](https://www.typescriptlang.org/)
+- [Canvas API](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API)
+- [MediaDevices API](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices)
 
-## � Contact & Support
+## Contact & Support
 
-### 🏭 **Industrial Inquiries**
-- **Gujarat Apollo Industries Ltd**
-- **Email**: [info@apollo.co.in](mailto:info@apollo.co.in)
-- **Website**: [www.apollo.co.in](https://www.apollo.co.in/)
-- **Location**: Mehsana, Gujarat, India
+### Industrial Inquiries
+- Gujarat Apollo Industries Ltd
+- Email: info@apollo.co.in
+- Website: www.apollo.co.in
+- Location: Mehsana, Gujarat, India
 
-### 👨‍💻 **Technical Support**
-- **GitHub Issues**: [Create an issue](../../issues) for bugs and feature requests
-- **Documentation**: This README and inline code comments
-- **Community**: Join discussions in GitHub Discussions
+### Technical Support
+- GitHub Issues: Create bug reports and feature requests
+- Documentation: README and inline code comments
+- Community: GitHub Discussions
 
-### 🌟 **Show Your Support**
+### Show Your Support
 
-If this project helps your manufacturing workflow:
-- ⭐ **Star this repository** on GitHub
-- 🍴 **Fork and contribute** improvements  
-- 📢 **Share with others** in the manufacturing industry
-- 📝 **Write about your experience** using the system
+If this project helps your workflow:
+- Star the repository
+- Fork and contribute
+- Share with peers in manufacturing
+- Write about your experience
 
 ---
 
 <div align="center">
 
-**🔧 Built with ❤️ for Gujarat Apollo Industries Ltd, Mehsana**
+**Built for Gujarat Apollo Industries Ltd, Mehsana**
 
 *Transforming Industrial Manufacturing with AI-Powered Part Recognition*
 
